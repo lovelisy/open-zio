@@ -63,7 +63,9 @@ public final class FontRenderer implements ClientAccess {
       while ((stale = pendingRelease.poll()) != null) {
          stale.release();
       }
-      this.getRenderer().flush();
+      if (this.renderer != null) {
+         this.renderer.flush();
+      }
    }
 
    public boolean isFontLoading() {
@@ -181,8 +183,7 @@ public final class FontRenderer implements ClientAccess {
                argb,
                true,
                poses.last().pose(),
-               this.getRenderer()
-                  .getBufferSource(),
+               ClientAccess.zioMinecraft.renderBuffers().bufferSource(),
                displayMode,
                0,
                15728880
@@ -222,8 +223,7 @@ public final class FontRenderer implements ClientAccess {
                argb,
                false,
                poses.last().pose(),
-               this.getRenderer()
-                  .getBufferSource(),
+               ClientAccess.zioMinecraft.renderBuffers().bufferSource(),
                displayMode,
                0,
                15728880

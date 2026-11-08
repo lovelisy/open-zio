@@ -211,10 +211,6 @@ public final class GuiDrawUtils implements ClientAccess {
    public static void drawText(
       PoseStack poseStack, String text, int x, int y, int color, boolean shadow
    ) {
-      if (shadow) {
-
-         FontRenderer initializedFontRenderer = FontRenderer.INSTANCE;
-      }
       ClientAccess.zioMinecraft.font
          .drawInBatch(
             text,
@@ -223,9 +219,7 @@ public final class GuiDrawUtils implements ClientAccess {
             color,
             shadow,
             poseStack.last().pose(),
-            FontRenderer.INSTANCE
-               .getRenderer()
-               .getBufferSource(),
+            ClientAccess.zioMinecraft.renderBuffers().bufferSource(),
             DisplayMode.NORMAL,
             0,
             15728880
