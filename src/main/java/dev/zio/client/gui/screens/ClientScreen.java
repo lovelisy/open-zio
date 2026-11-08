@@ -26,6 +26,7 @@ import dev.zio.client.gui.ScissorStack;
 import dev.zio.client.render.GuiScaleUtils;
 import dev.zio.client.modules.client.UIModule;
 import dev.zio.client.modules.render.BlurModule;
+import dev.zio.client.render.text.LanguageTable;
 import dev.zio.client.ZioClient;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -49,6 +50,11 @@ import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
 public class ClientScreen extends Screen implements ClientAccess {
+
+   protected static String lang(String key, String fallback) {
+      LanguageTable table = ClientContext.languageTable;
+      return table == null ? fallback : table.getTranslationOrDefault("ui." + key, fallback);
+   }
 
    private static final Identifier AERO_TEXTURE = Identifier.fromNamespaceAndPath(
       "zio", "textures/aero.png"

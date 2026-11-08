@@ -10,6 +10,7 @@
 package dev.zio.client.gui.screens;
 
 import dev.zio.client.ClientAccess;
+import dev.zio.client.ClientContext;
 
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.minecraft.client.gui.screens.ConfirmScreen;
@@ -19,8 +20,11 @@ public class DisconnectConfirmationScreen extends ConfirmScreen {
    public DisconnectConfirmationScreen(Runnable confirmationAction) {
       super(
          new ConfirmationCallback(confirmationAction),
-         Component.literal("Confirm Disconnect"),
-         Component.literal("Are you sure that you want to disconnect?")
+         Component.literal(
+            ClientContext.languageTable.getTranslationOrDefault("ui.ConfirmDisconnect", "Confirm Disconnect")),
+         Component.literal(
+            ClientContext.languageTable.getTranslationOrDefault(
+               "ui.ConfirmDisconnectMessage", "Are you sure that you want to disconnect?"))
       );
    }
 

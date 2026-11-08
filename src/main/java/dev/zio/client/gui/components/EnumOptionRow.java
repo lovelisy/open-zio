@@ -9,6 +9,7 @@
 
 package dev.zio.client.gui.components;
 
+import dev.zio.client.ClientContext;
 import dev.zio.client.render.FontRenderer;
 import dev.zio.client.settings.NamedEntry;
 
@@ -38,10 +39,12 @@ public class EnumOptionRow<E extends Enum<E> & NamedEntry> extends AbstractCompo
    @Override
    public void render(PoseStack poseStack, double mouseX, double mouseY) {
       super.render(poseStack, mouseX, mouseY);
+      String displayLabel = ClientContext.languageTable.translateEnum(
+         this.enumComponent.getSetting().getValue().getDeclaringClass().getName(), this.label, this.label);
       FontRenderer.INSTANCE
          .drawWithShadow(
             poseStack,
-            this.label,
+            displayLabel,
             this.getPanel()
                   .getX()
                + this.getPanel()
@@ -49,7 +52,7 @@ public class EnumOptionRow<E extends Enum<E> & NamedEntry> extends AbstractCompo
                   / 2.0F
                - FontRenderer.INSTANCE
                      .getWidth(
-                        this.label
+                        displayLabel
                      )
                   / 2.0F,
             this.enumComponent

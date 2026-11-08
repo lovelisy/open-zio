@@ -3,7 +3,7 @@ plugins {
     id 'idea'
 }
 
-base { archivesName = 'zio' }
+base { archivesName = 'OpenMio' }
 
 repositories {
     mavenCentral()
@@ -44,6 +44,10 @@ def nestedLibraries = { configuration, patterns ->
     })
 }
 
+def viaFabricPlusModules = nestedLibraries(configurations.viaDistribution) {
+    include 'META-INF/jars/viafabricplus-*.jar'
+}
+
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
     mappings loom.officialMojangMappings()
@@ -75,9 +79,8 @@ dependencies {
         exclude 'META-INF/jars/fabric-*.jar', 'META-INF/jars/gson-2*.jar',
             'META-INF/jars/viafabricplus-*.jar'
     }
-    modCompileOnly nestedLibraries(configurations.viaDistribution) {
-        include 'META-INF/jars/viafabricplus-*.jar'
-    }
+    modCompileOnly viaFabricPlusModules
+    modLocalRuntime viaFabricPlusModules
     modLocalRuntime nestedLibraries(configurations.entityCullingDistribution) {
         include 'META-INF/jars/*.jar'
     }
@@ -111,7 +114,7 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.compilerArgs += ['-proc:none']
     options.fork = true
-    options.forkOptions.memoryMaximumSize = '4g'
+    options.forkOptions.memoryMaximumSize = providers.environmentVariable('CI').isPresent() ? '384m' : '4g'
 }
 
 tasks.named('remapJar') {

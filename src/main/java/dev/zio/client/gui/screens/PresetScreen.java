@@ -58,7 +58,7 @@ public final class PresetScreen extends ClientScreen {
             0.75F
                * hintOpacity
          );
-         String hintText = "Drop preset files here";
+         String hintText = lang("DropPresetFilesHere", "Drop preset files here");
          float hintWidth = FontRenderer.INSTANCE
             .getWidth(hintText);
          FontRenderer.INSTANCE

@@ -69,7 +69,7 @@ public final class ModuleCommand extends Command {
 
    @NotNull
    private MutableComponent createModuleTitle() {
-      String moduleName = this.module.getName();
+      String moduleName = ClientContext.languageTable.translateModule(this.module.getName());
       MutableComponent title = Component.literal(moduleName);
       UnaryOperator<Style> titleColorStyle = titleStyle -> {
          Supplier<Integer> titleDynamicColor = () -> {
@@ -164,10 +164,10 @@ public final class ModuleCommand extends Command {
             NotificationsModule notificationsForCheck = notifications;
             if (NotificationsModule.shouldNotifyCommands(notificationsForCheck)) {
                Module moduleForName = this.module;
-               String moduleName = moduleForName.getName();
+               String moduleName = ClientContext.languageTable.translateModule(moduleForName.getName());
                MutableComponent moduleNameText = Component.literal(moduleName);
                MutableComponent spaceText = Component.literal(" ");
-               String settingName = setting.getName();
+               String settingName = ClientContext.languageTable.translateSetting(moduleForName.getConfigName(), setting.getName(), setting.getName());
                MutableComponent clearedSettingNameText = spaceText.append(settingName);
                UnaryOperator<Style> clearedSettingNameStyle = grayStyle -> {
                   ChatFormatting grayFormatting = ChatFormatting.GRAY;
@@ -258,10 +258,10 @@ public final class ModuleCommand extends Command {
             NotificationsModule notificationsForCheck = notifications;
             if (NotificationsModule.shouldNotifyCommands(notificationsForCheck)) {
                Module moduleForName = this.module;
-               String moduleName = moduleForName.getName();
+               String moduleName = ClientContext.languageTable.translateModule(moduleForName.getName());
                MutableComponent moduleNameText = Component.literal(moduleName);
                MutableComponent spaceText = Component.literal(" ");
-               String settingName = setting.getName();
+               String settingName = ClientContext.languageTable.translateSetting(moduleForName.getConfigName(), setting.getName(), setting.getName());
                MutableComponent changedSettingNameText = spaceText.append(settingName);
                UnaryOperator<Style> changedSettingNameStyle = grayStyle -> {
                   ChatFormatting grayFormatting = ChatFormatting.GRAY;
@@ -305,10 +305,10 @@ public final class ModuleCommand extends Command {
          Module moduleForLookup = this.module;
          Setting<?> setting = ModuleSettingArgumentType.getSetting(querySettingContext, moduleForLookup, "setting");
          Module moduleForName = this.module;
-         String moduleName = moduleForName.getName();
+         String moduleName = ClientContext.languageTable.translateModule(moduleForName.getName());
          MutableComponent queryMessage = Component.literal(moduleName);
          MutableComponent spaceText = Component.literal(" ");
-         String settingName = setting.getName();
+         String settingName = ClientContext.languageTable.translateSetting(moduleForName.getConfigName(), setting.getName(), setting.getName());
          MutableComponent querySettingNameText = spaceText.append(settingName);
          UnaryOperator<Style> querySettingNameStyle = grayStyle -> {
             ChatFormatting grayFormatting = ChatFormatting.GRAY;
@@ -346,7 +346,7 @@ public final class ModuleCommand extends Command {
 
          MutableComponent enabledMessage = Component.literal("Module ");
          Module moduleForName = this.module;
-         String moduleName = moduleForName.getName();
+         String moduleName = ClientContext.languageTable.translateModule(moduleForName.getName());
          MutableComponent enabledModuleNameText = Component.literal(moduleName);
          UnaryOperator<Style> enabledModuleNameStyle = grayStyle -> {
             ChatFormatting grayFormatting = ChatFormatting.GRAY;
@@ -410,7 +410,9 @@ public final class ModuleCommand extends Command {
 
          while (settingsIterator.hasNext()) {
             Setting<?> setting = (Setting<?>)settingsIterator.next();
-            String settingLabel = "\n" + String.valueOf(setting.getName()) + ": ";
+            String settingLabel = "\n"
+               + ClientContext.languageTable.translateSetting(this.module.getConfigName(), setting.getName(), setting.getName())
+               + ": ";
             MutableComponent settingLine = Component.literal(settingLabel);
             switch (setting) {
                case EnumSetting<?> enumSetting:

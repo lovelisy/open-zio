@@ -287,7 +287,7 @@ public class StringSettingComponent extends SettingComponent<String> {
    }
 
    private String getDisplayText() {
-      String name = this.setting.getName();
+      String name = this.getDisplayName();
       String value = this.setting.getValue();
       return "\u0001: \u0001"
          .replaceFirst("\u0001", Matcher.quoteReplacement(String.valueOf(name)))

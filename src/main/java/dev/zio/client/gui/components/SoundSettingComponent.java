@@ -58,7 +58,7 @@ public class SoundSettingComponent extends SettingComponent<NamedIdentifier> {
                - 0.5F,
             this.getUiModule().colorSetting.getValue()
          );
-         String settingName = this.setting.getName();
+         String settingName = this.getDisplayName();
          String soundName = (this.setting.getValue()).getName();
 
          String label = (String.valueOf(settingName) + ": \u0001")

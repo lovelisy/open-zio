@@ -19,6 +19,11 @@ public final class GuiScaleUtils implements ClientAccess {
    private static double previousGuiScale = -1.0D;
    private static double scaleMultiplier = 1.0D;
 
+   public static int getBaseScaledHeight() {
+      Window window = zioMinecraft.getWindow();
+      return ADVANCED_UI_SCALE_LOADED ? window.getGuiScaledHeight() : (int)Math.ceil(window.getHeight() / (double)calculateGuiScale());
+   }
+
    public static int getScaledHeight() {
       return (int)(zioMinecraft.getWindow().getGuiScaledHeight() / scaleMultiplier + 1.0D);
    }

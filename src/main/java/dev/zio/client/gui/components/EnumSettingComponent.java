@@ -11,6 +11,7 @@ package dev.zio.client.gui.components;
 
 import dev.zio.client.utils.ClampedInterpolatedFloat;
 import dev.zio.client.utils.ExperimentalFeatures;
+import dev.zio.client.ClientContext;
 import dev.zio.client.gui.components.EnumOptionRow;
 import dev.zio.client.config.EnumJsonConverter;
 import dev.zio.client.render.GuiDrawUtils;
@@ -229,8 +230,10 @@ public class EnumSettingComponent<E extends Enum<E> & NamedEntry> extends Settin
          }
       }
 
-      String settingName = this.setting.getName();
-      String valueName = EnumJsonConverter.getName(this.setting.getValue());
+      String settingName = this.getDisplayName();
+      String rawValueName = EnumJsonConverter.getName(this.setting.getValue());
+      String valueName = ClientContext.languageTable.translateEnum(
+         this.setting.getValue().getDeclaringClass().getName(), rawValueName, rawValueName);
 
       String label = (String.valueOf(settingName) + ": \u0001")
          .replaceFirst("\u0001", Matcher.quoteReplacement(String.valueOf(valueName)));

@@ -183,7 +183,7 @@ public final class UIModule extends Module {
       BooleanSetting descriptionsOption = new BooleanSetting("Descriptions", true);
       descriptionsOption.markVisibilityDependency();
       this.descriptionsSetting = this.add(descriptionsOption);
-      this.languageSetting = this.add(new EnumSetting<>("Language", UIModule.LanguageChoice.ENGLISH)
+      this.languageSetting = this.add(new EnumSetting<>("Language", UIModule.LanguageChoice.CHINESE)
          .dependsOn(this.descriptionsSetting));
       this.settingsSetting = this.add(new BooleanSetting("Settings", true)
          .dependsOn(this.descriptionsSetting));
@@ -310,8 +310,12 @@ public final class UIModule extends Module {
          UIModule.LanguageChoice selectedLanguage = language.getValue();
          InputStream languageStream = selectedLanguage.openStream();
          tableCapture.load(languageStream);
-         if (selectedLanguage == LanguageChoice.CHINESE && FontsModule.INSTANCE.isToggled()) {
-            FontsModule.INSTANCE.validateFont(false);
+         FontsModule fontsModule = FontsModule.INSTANCE;
+         if (fontsModule != null) {
+            fontsModule.chineseSetting.setValue(selectedLanguage == LanguageChoice.CHINESE);
+            if (selectedLanguage == LanguageChoice.CHINESE && fontsModule.isToggled()) {
+               fontsModule.validateFont(false);
+            }
          }
       };
       languageCallbackSetting.setChangeCallback(languageChangeCallback);

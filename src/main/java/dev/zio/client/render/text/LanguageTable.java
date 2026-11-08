@@ -21,9 +21,10 @@ import org.apache.commons.io.IOUtils;
 
 public final class LanguageTable {
    private final Map<String, String> translations = new HashMap<>();
+   private boolean chineseEnabled = true;
 
    public LanguageTable() {
-      InputStream languageInput = UIModule.LanguageChoice.ENGLISH.openStream();
+      InputStream languageInput = UIModule.LanguageChoice.CHINESE.openStream();
       this.load(languageInput);
    }
 
@@ -86,5 +87,33 @@ public final class LanguageTable {
 
    public String getTranslationOrDefault(String key, String fallback) {
       return this.translations.getOrDefault(key, fallback);
+   }
+
+   public void setChineseEnabled(boolean enabled) {
+      this.chineseEnabled = enabled;
+   }
+
+   public boolean isChineseEnabled() {
+      return this.chineseEnabled;
+   }
+
+   public String translateModule(String name) {
+      return this.chineseEnabled ? this.translations.getOrDefault("names.modules." + name, name) : name;
+   }
+
+   public String translateSetting(String moduleName, String settingName, String fallback) {
+      return this.chineseEnabled
+         ? this.translations.getOrDefault("names.settings." + moduleName + "." + settingName, fallback)
+         : fallback;
+   }
+
+   public String translateEnum(String enumClassName, String valueName, String fallback) {
+      return this.chineseEnabled
+         ? this.translations.getOrDefault("names.enums." + enumClassName + "." + valueName, fallback)
+         : fallback;
+   }
+
+   public String translateCategory(String name) {
+      return this.chineseEnabled ? this.translations.getOrDefault("names.categories." + name, name) : name;
    }
 }

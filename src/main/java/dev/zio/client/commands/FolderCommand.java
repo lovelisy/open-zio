@@ -13,11 +13,13 @@ import dev.zio.client.managers.ConfigurationManager;
 import dev.zio.client.settings.options.PresetCategory;
 import dev.zio.client.utils.chat.ChatUtils;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Util;
 
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import java.awt.Desktop;
+import java.awt.GraphicsEnvironment;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -74,6 +76,10 @@ public final class FolderCommand extends Command {
    }
 
    private static int openDirectory(Path directory) {
+      if (GraphicsEnvironment.isHeadless()) {
+         Util.getPlatform().openPath(directory);
+         return 1;
+      }
       try {
          Desktop desktop = Desktop.getDesktop();
          File file = directory.toFile();

@@ -137,6 +137,7 @@ public final class ClientRenderTypes {
    private static final RenderType GUI = RenderType.create(
       "gui", setup(RenderPipelines.DEBUG_QUADS)
    );
+   private static final RenderType WORLD_TAG_QUADS = create("zio_world_tag_quads", ClientRenderPipelines.WORLD_TAG_QUADS);
    private static final RenderType GUI_TRIANGLES = RenderType.create(
       "gui_trig",
       setup(
@@ -178,6 +179,10 @@ public final class ClientRenderTypes {
 
    public static RenderType entityShader() {
       return ENTITY_SHADER;
+   }
+
+   public static RenderType worldTagQuads() {
+      return WORLD_TAG_QUADS;
    }
 
    public static RenderType gui() {

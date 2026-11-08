@@ -38,7 +38,7 @@ public class ModuleCategoryPanel extends Panel implements ClientAccess {
    }
 
    public ModuleCategoryPanel(ModuleCategory category) {
-      super(FontRenderer.capitalize(category.getName()));
+      super(FontRenderer.capitalize(ClientContext.languageTable.translateCategory(category.getName())));
       this.category = category;
       this.populateModules();
    }
@@ -58,9 +58,11 @@ public class ModuleCategoryPanel extends Panel implements ClientAccess {
       }
 
       if (child instanceof ModuleComponent moduleComponent && !searchBox.getValue().isEmpty()) {
+         String query = TextUtils.normalizeKeyboardLayout(searchBox.getValue());
          for (String alias : moduleComponent.getModule()
             .getAliases()) {
-            if (TextUtils.containsIgnoreCase(alias, TextUtils.normalizeKeyboardLayout(searchBox.getValue()))) {
+            if (TextUtils.containsIgnoreCase(alias, query)
+               || TextUtils.containsIgnoreCase(ClientContext.languageTable.translateModule(alias), query)) {
                return true;
             }
          }

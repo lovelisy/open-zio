@@ -383,16 +383,16 @@ public final class ViewModelEditorScreen extends ClientScreen {
             OVERLAY_COLOR
          );
       List instructions = List.of(
-         "Left Click - Rotate",
-         "Right Click - Move",
-         "Middle Click - Scale",
-         "Mouse Scroll - Move by Z",
-         "Mouse Scroll + Shift - Rotate by Z",
-         "Mouse Scroll + Alt - Scale by Z",
-         "Hold Ctrl - Modify one",
-         "Hold Shift - Lock axis",
-         "Ctrl + Z - Undo",
-         "Delete - Reset to defaults"
+         lang("VmLeftClickRotate", "Left Click - Rotate"),
+         lang("VmRightClickMove", "Right Click - Move"),
+         lang("VmMiddleClickScale", "Middle Click - Scale"),
+         lang("VmScrollMoveZ", "Mouse Scroll - Move by Z"),
+         lang("VmScrollShiftRotateZ", "Mouse Scroll + Shift - Rotate by Z"),
+         lang("VmScrollAltScaleZ", "Mouse Scroll + Alt - Scale by Z"),
+         lang("VmHoldCtrlModifyOne", "Hold Ctrl - Modify one"),
+         lang("VmHoldShiftLockAxis", "Hold Shift - Lock axis"),
+         lang("VmCtrlZUndo", "Ctrl + Z - Undo"),
+         lang("VmDeleteReset", "Delete - Reset to defaults")
       );
       int textY = 2;
 

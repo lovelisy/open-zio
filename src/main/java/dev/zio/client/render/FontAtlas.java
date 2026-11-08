@@ -10,27 +10,16 @@
 package dev.zio.client.render;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import dev.zio.client.ClientAccess;
+import dev.zio.client.modules.client.FontsModule;
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.chars.CharIterator;
-import java.awt.Color;
 import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.font.FontRenderContext;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Collection;
-import javax.imageio.ImageIO;
+import java.util.function.Supplier;
+import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.resources.Identifier;
-import org.lwjgl.BufferUtils;
 
 public final class FontAtlas {
    public static final Identifier ATLAS_TEXTURE = Identifier.fromNamespaceAndPath("zio", "textures/font.png");
@@ -38,158 +27,167 @@ public final class FontAtlas {
    public static final int LAYOUT_VALUE = 4;
    public static final int SECONDARY_LAYOUT_VALUE = 1;
    public static final float LAYOUT_SCALE = 0.25F;
+   public static final int PIXEL_HEIGHT = 32;
+   private static final Supplier<String> ATLAS_LABEL_SUPPLIER = new Supplier<String>() {
+      @Override
+      public String get() {
+         return ATLAS_LABEL;
+      }
+   };
+   private static final Glyph MISSING = new Glyph(0.0F, 0.0F, 0.0F, 0.0F, 0.0F);
    private final Char2ObjectOpenHashMap<Glyph> glyphs = new Char2ObjectOpenHashMap<>();
+   private final Char2ObjectOpenHashMap<Glyph> missing = new Char2ObjectOpenHashMap<>();
+   private final MeshBuffer mesh = MeshBuffer.create(4194304);
    private final Font font;
-   private int fontHeight = -1;
-   private int atlasSize = -1;
+   private AwtFontAtlas atlas;
+   private MipmapFontTexture texture;
+   private NativeImage pixels;
+   private int fontHeight;
 
    public FontAtlas(Font font) {
       this.font = font;
+      this.fontHeight = Math.max(1, Math.round(font.getSize2D()));
+   }
+
+   private AwtFontAtlas atlas() {
+      if (this.atlas == null) {
+         this.atlas = new AwtFontAtlas(this.font);
+         this.fontHeight = Math.max(1, this.atlas.getRowHeight());
+      }
+      return this.atlas;
+   }
+
+   private void ensureTexture() {
+      if (this.texture != null) {
+         return;
+      }
+      this.pixels = new NativeImage(NativeImage.Format.RGBA, AwtFontAtlas.WIDTH, AwtFontAtlas.HEIGHT, false);
+      this.texture = new MipmapFontTexture(ATLAS_LABEL_SUPPLIER, AwtFontAtlas.WIDTH, AwtFontAtlas.HEIGHT);
+      ClientAccess.zioMinecraft.getTextureManager().register(ATLAS_TEXTURE, this.texture);
+   }
+
+   private void uploadPending() {
+      MipmapFontTexture target = this.texture;
+      if (target == null || this.pixels == null) {
+         return;
+      }
+      AwtFontAtlas source = this.atlas();
+      if (!source.hasPending()) {
+         return;
+      }
+      source.flushInto(this.pixels);
+      target.upload(this.pixels);
+   }
+
+   private synchronized Glyph resolve(char character) {
+      Glyph glyph = this.glyphs.get(character);
+      if (glyph != null) {
+         return glyph;
+      }
+      if (this.missing.containsKey(character)) {
+         return null;
+      }
+      Glyph created = this.atlas().createGlyph(character);
+      if (created == null) {
+         this.missing.put(character, MISSING);
+         return null;
+      }
+      this.glyphs.put(character, created);
+      return created;
+   }
+
+   private Glyph fallback(char character) {
+      if (character == '?') {
+         return null;
+      }
+      Glyph glyph = this.glyphs.get('?');
+      return glyph != null ? glyph : this.resolve('?');
+   }
+
+   public synchronized void flush() {
+      boolean needsUpload = this.atlas != null && this.atlas.hasPending();
+      if (!needsUpload && !this.mesh.isBuilding()) {
+         return;
+      }
+      this.ensureTexture();
+      this.uploadPending();
+      if (this.mesh.isBuilding()) {
+         boolean antiAlias = FontsModule.INSTANCE == null || FontsModule.INSTANCE.antiAliasSetting.getValue();
+         this.mesh.draw(ClientRenderTypes.font(ATLAS_TEXTURE, antiAlias));
+      }
    }
 
    public void release() {
+      if (this.mesh.isBuilding()) {
+         this.mesh.draw();
+      }
+      if (this.atlas != null) {
+         this.atlas.dispose();
+         this.atlas = null;
+      }
+      if (this.pixels != null) {
+         this.pixels.close();
+         this.pixels = null;
+      }
+      MipmapFontTexture owned = this.texture;
+      this.texture = null;
+      if (owned != null) {
+         AbstractTexture current = ClientAccess.zioMinecraft.getTextureManager().getTexture(ATLAS_TEXTURE);
+         if (current == owned) {
+            ClientAccess.zioMinecraft.getTextureManager().release(ATLAS_TEXTURE);
+         } else {
+            owned.close();
+         }
+      }
       this.glyphs.clear();
-      ClientAccess.zioMinecraft.getTextureManager().release(ATLAS_TEXTURE);
+      this.missing.clear();
    }
 
-   public void buildAtlas(Collection<Character> characters) {
-      this.atlasSize = align(this.calculateAtlasSize(characters), 2);
-      BufferedImage metricsImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
-      Graphics2D graphics = metricsImage.createGraphics();
-      try {
-         graphics.setFont(this.font);
-         configureGraphics(graphics);
-         FontMetrics metrics = graphics.getFontMetrics();
-         int rowHeight = 0;
-         int cursorX = 0;
-         int cursorY = 0;
-         for (char character : characters) {
-            Rectangle2D bounds = metrics.getStringBounds(Character.toString(character), graphics);
-            int width = align(bounds.getBounds().width + 8, 2);
-            int height = align(bounds.getBounds().height, 2);
-            if (cursorX + width >= this.atlasSize) {
-               cursorX = 0;
-               cursorY += rowHeight + 2;
-               rowHeight = 0;
-            }
-            Uv minUv = new Uv((float)cursorX / this.atlasSize, (float)cursorY / this.atlasSize);
-            Uv maxUv = new Uv((float)(cursorX + width) / this.atlasSize, (float)(cursorY + height) / this.atlasSize);
-            this.glyphs.put(character, new Glyph(cursorX, cursorY, width, height, minUv, maxUv));
-            this.fontHeight = Math.max(this.fontHeight, height);
-            rowHeight = Math.max(rowHeight, height);
-            cursorX += width;
-         }
-         if ("Dialog".equals(this.font.getFamily())) {
-            this.fontHeight -= 2;
-         }
-      } finally {
-         graphics.dispose();
-         metricsImage.flush();
-      }
-   }
-
-   private int calculateAtlasSize(Collection<Character> characters) {
-      double maxWidth = -1.0D;
-      double maxHeight = -1.0D;
-      FontRenderContext context = new FontRenderContext(new AffineTransform(), true, true);
-      for (char character : characters) {
-         Rectangle2D bounds = this.font.getStringBounds(Character.toString(character), context);
-         maxWidth = Math.max(maxWidth, bounds.getWidth());
-         maxHeight = Math.max(maxHeight, bounds.getHeight());
-      }
-      maxWidth += 8.0D;
-      maxHeight += 4.0D;
-      double width = Math.ceil(Math.sqrt(maxWidth * maxWidth * characters.size()) / maxWidth);
-      double height = Math.ceil(Math.sqrt(maxHeight * maxHeight * characters.size()) / maxHeight);
-      return (int)Math.ceil(Math.max(width, height) * Math.max(maxWidth, maxHeight)) + 1;
-   }
-
-   private BufferedImage createMipLevel(int mipLevel) {
-      int scale = 1 << mipLevel;
-      int size = Math.max(1, this.atlasSize / scale);
-      BufferedImage image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
-      Graphics2D graphics = image.createGraphics();
-      try {
-         Font mipFont = mipLevel == 0 ? this.font : this.font.deriveFont(this.font.getSize2D() / scale);
-         graphics.setFont(mipFont);
-         graphics.setColor(Color.WHITE);
-         configureGraphics(graphics);
-         FontMetrics metrics = graphics.getFontMetrics();
-         int padding = Math.max(1, 2 / scale);
-         CharIterator characters = this.glyphs.keySet().iterator();
-         while (characters.hasNext()) {
-            char character = characters.nextChar();
-            Glyph glyph = this.glyphs.get(character);
-            graphics.drawString(Character.toString(character), glyph.x / scale + padding, glyph.y / scale + metrics.getAscent());
-         }
-      } finally {
-         graphics.dispose();
-      }
-      return image;
-   }
-
-   private static void configureGraphics(Graphics2D graphics) {
-      graphics.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
-      graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-      graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-   }
-
-   private static int align(int value, int alignment) {
-      return (value + alignment - 1) / alignment * alignment;
-   }
-
-   public void uploadTexture() {
-      NativeImage[] mipImages = new NativeImage[2];
-      try {
-         for (int level = 0; level < mipImages.length; level++) {
-            mipImages[level] = toNativeImage(this.createMipLevel(level));
-         }
-         ClientAccess.zioMinecraft.getTextureManager().register(ATLAS_TEXTURE, new MipmapFontTexture(() -> ATLAS_LABEL, mipImages));
-      } catch (Exception exception) {
-         for (NativeImage image : mipImages) {
-            if (image != null) {
-               image.close();
-            }
-         }
-         throw new RuntimeException(exception);
-      }
-   }
-
-   private static NativeImage toNativeImage(BufferedImage image) throws IOException {
-      ByteArrayOutputStream output = new ByteArrayOutputStream();
-      if (!ImageIO.write(image, "png", output)) {
-         throw new IOException("No PNG writer is available");
-      }
-      ByteBuffer buffer = BufferUtils.createByteBuffer(output.size()).put(output.toByteArray());
-      buffer.flip();
-      return NativeImage.read(buffer);
-   }
-
-   public float drawGlyph(PoseStack poses, VertexConsumer consumer, char character, float x, float y, int argb) {
+   public float drawGlyph(PoseStack poses, char character, float x, float y, int argb) {
       Glyph glyph = this.glyphs.get(character);
       if (glyph == null) {
-         return 0.0F;
+         glyph = this.resolve(character);
       }
-      float z = FontRenderer.getZOffset();
-      consumer.addVertex(poses.last(), x, y + glyph.height, z).setColor(argb).setUv(glyph.minimumUv.u, glyph.maximumUv.v);
-      consumer.addVertex(poses.last(), x + glyph.width, y + glyph.height, z).setColor(argb).setUv(glyph.maximumUv.u, glyph.maximumUv.v);
-      consumer.addVertex(poses.last(), x + glyph.width, y, z).setColor(argb).setUv(glyph.maximumUv.u, glyph.minimumUv.v);
-      consumer.addVertex(poses.last(), x, y, z).setColor(argb).setUv(glyph.minimumUv.u, glyph.minimumUv.v);
-      return glyph.width - 8.0F;
+      if (glyph == null || glyph.advance() <= 0.0F) {
+         Glyph fallback = this.fallback(character);
+         return fallback == null ? 0.0F : fallback.advance();
+      }
+      if (!this.mesh.isBuilding()) {
+         this.mesh.begin(Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+      }
+      float z = (float)FontRenderer.getZOffset();
+      float top = y;
+      float bottom = y + glyph.height();
+      float left = x;
+      float right = x + glyph.width();
+      float u0 = glyph.x() / (float)AwtFontAtlas.WIDTH;
+      float u1 = (glyph.x() + glyph.width()) / (float)AwtFontAtlas.WIDTH;
+      float v0 = glyph.y() / (float)AwtFontAtlas.HEIGHT;
+      float v1 = (glyph.y() + glyph.height()) / (float)AwtFontAtlas.HEIGHT;
+      this.mesh.addVertex(poses.last(), left, bottom, z).setColor(argb).setUv(u0, v1);
+      this.mesh.addVertex(poses.last(), right, bottom, z).setColor(argb).setUv(u1, v1);
+      this.mesh.addVertex(poses.last(), right, top, z).setColor(argb).setUv(u1, v0);
+      this.mesh.addVertex(poses.last(), left, top, z).setColor(argb).setUv(u0, v0);
+      return glyph.advance();
    }
 
    public float getGlyphWidth(char character) {
       Glyph glyph = this.glyphs.get(character);
       if (glyph == null) {
-         glyph = this.glyphs.get('?');
+         glyph = this.resolve(character);
       }
-      return glyph == null ? 0.0F : glyph.width - 8.0F;
+      if (glyph == null) {
+         Glyph fallback = this.fallback(character);
+         return fallback == null ? 0.0F : fallback.advance();
+      }
+      return glyph.advance();
    }
 
    public int getHeight() {
+      this.atlas();
       return this.fontHeight;
    }
 
-   private record Uv(float u, float v) {}
-   private record Glyph(int x, int y, int width, int height, Uv minimumUv, Uv maximumUv) {}
+   record Glyph(float x, float y, float width, float height, float advance) {
+   }
 }

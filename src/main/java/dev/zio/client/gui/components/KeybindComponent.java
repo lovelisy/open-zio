@@ -86,14 +86,16 @@ public class KeybindComponent extends AbstractComponent {
          ClientScreen.cursor = CursorType.INPUT;
       }
 
-      String modeLabel = "Key";
+      String modeLabel = ClientContext.languageTable.getTranslationOrDefault("ui.Key", "Key");
       if (this.hovered
          || this.getKeybind()
                .mode()
             != Keybind.Mode.TOGGLE) {
-         modeLabel = this.getKeybind()
+         String rawMode = this.getKeybind()
             .mode()
             .getName();
+         modeLabel = ClientContext.languageTable.translateEnum(
+            Keybind.Mode.class.getName(), rawMode, rawMode);
       }
 
       String keyLabel = this.getKeybind()

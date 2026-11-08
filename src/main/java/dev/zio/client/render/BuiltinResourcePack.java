@@ -10,6 +10,10 @@
 package dev.zio.client.render;
 
 import dev.zio.client.ZioClient;
+import dev.zio.client.managers.ConfigurationManager;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.network.chat.Component;
@@ -20,6 +24,7 @@ import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.metadata.MetadataSectionType;
 import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.resources.IoSupplier;
+import net.minecraft.server.packs.resources.Resource;
 import org.jetbrains.annotations.Nullable;
 
 public final class BuiltinResourcePack implements PackResources {
@@ -27,6 +32,27 @@ public final class BuiltinResourcePack implements PackResources {
 
    public BuiltinResourcePack() {
       this.location = new PackLocationInfo("zio", Component.literal(ZioClient.NAME), PackSource.BUILT_IN, Optional.empty());
+   }
+
+   public static Optional<Resource> resolveResource(Identifier id, Optional<Resource> original) {
+      if (id.getNamespace().equals("zio-mount")) {
+         Path path = ConfigurationManager.ROOT_DIRECTORY.resolve(id.getPath());
+         if (Files.isRegularFile(path)) {
+            return Optional.of(new Resource(new BuiltinResourcePack(), () -> Files.newInputStream(path)));
+         }
+      } else if (original.isEmpty()) {
+         String path = id.getPath();
+         boolean builtinShader = path.contains("/blur_mask.") || path.contains("/bloom.");
+         if (id.getNamespace().equals("zio") || builtinShader) {
+            String namespace = builtinShader ? "minecraft" : "zio";
+            URL resource = ZioClient.class.getResource("/assets/%s/%s".formatted(namespace, path));
+            if (resource != null) {
+               return Optional.of(new Resource(new BuiltinResourcePack(), resource::openStream));
+            }
+         }
+      }
+
+      return original;
    }
 
    @Override

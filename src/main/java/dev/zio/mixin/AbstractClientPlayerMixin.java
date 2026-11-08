@@ -13,8 +13,9 @@ import com.mojang.authlib.GameProfile;
 import dev.zio.client.events.AbstractClientPlayerTickEvent;
 import dev.zio.client.ClientAccess;
 import dev.zio.client.ClientContext;
-import dev.zio.client.render.CapeEntry;
+import dev.zio.client.modules.client.CapesModule;
 import dev.zio.client.modules.player.NameProtectModule;
+import dev.zio.client.render.CapeEntry;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -51,39 +52,34 @@ public abstract class AbstractClientPlayerMixin extends Player {
    @Inject(method = "getSkin", at = @At("RETURN"), cancellable = true)
    private void overridePlayerSkin(CallbackInfoReturnable<PlayerSkin> callback) {
       LocalPlayer localPlayer = Minecraft.getInstance().player;
-      PlayerSkin originalSkin = (PlayerSkin)callback.getReturnValue();
+      PlayerSkin originalSkin = callback.getReturnValue();
       Texture bodyTexture = originalSkin.body();
+      Texture capeTexture = originalSkin.cape();
       PlayerModelType modelType = originalSkin.model();
-      if (nameProtectModule.isToggled()
-         && nameProtectModule.skinSetting.getValue()
-         && localPlayer.getGameProfile().name().equals(this.getGameProfile().name())) {
-         bodyTexture = new ResourceTexture(
-            protectedSkinTexture,
-            protectedSkinTexture
-         );
-         modelType = PlayerModelType.WIDE;
-         if (nameProtectModule.slimSetting.getValue()) {
-            modelType = PlayerModelType.SLIM;
-         }
-
-         callback.setReturnValue(new PlayerSkin(bodyTexture, originalSkin.cape(), originalSkin.elytra(), modelType, originalSkin.secure()));
-      }
-
       String playerName = this.getGameProfile().name();
-      CapeEntry capeEntry = null;
-      for (CapeEntry candidate : playerCapes) {
-         if (candidate.playerName().equals(playerName)) {
-            capeEntry = candidate;
-            break;
+      if (localPlayer != null
+         && nameProtectModule.isToggled()
+         && nameProtectModule.skinSetting.getValue()
+         && localPlayer.getGameProfile().name().equals(playerName)) {
+         bodyTexture = new ResourceTexture(protectedSkinTexture, protectedSkinTexture);
+         modelType = nameProtectModule.slimSetting.getValue() ? PlayerModelType.SLIM : PlayerModelType.WIDE;
+      }
+
+      CapesModule capesModule = ClientAccess.isLocalPlayer(this) ? ClientContext.getModule(CapesModule.class) : null;
+      if (capesModule != null && capesModule.isToggled()) {
+         capeTexture = capesModule.getCapeTexture();
+      } else {
+         for (CapeEntry candidate : playerCapes) {
+            if (candidate.playerName().equals(playerName)) {
+               Identifier textureId = candidate.getTexture();
+               capeTexture = new ResourceTexture(textureId, textureId);
+               break;
+            }
          }
       }
-      if (capeEntry != null) {
-         ResourceTexture capeTexture = new ResourceTexture(
-            capeEntry.getTexture(),
-            capeEntry.getTexture()
-         );
+
+      if (bodyTexture != originalSkin.body() || capeTexture != originalSkin.cape()) {
          callback.setReturnValue(new PlayerSkin(bodyTexture, capeTexture, originalSkin.elytra(), modelType, originalSkin.secure()));
-         callback.cancel();
       }
    }
 

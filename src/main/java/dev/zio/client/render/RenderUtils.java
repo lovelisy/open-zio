@@ -11,12 +11,10 @@ package dev.zio.client.render;
 
 import dev.zio.client.ClientAccess;
 
-import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.systems.RenderSystem.AutoStorageIndexBuffer;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -178,21 +176,13 @@ public final class RenderUtils implements ClientAccess {
    }
 
    public static void blitToMain(RenderTarget target, RenderPipeline pipeline, FilterMode filter) {
-      AutoStorageIndexBuffer indices = RenderSystem.getSequentialBuffer(Mode.QUADS);
-      GpuBuffer indexBuffer = indices.getBuffer(6);
       GpuTextureView outputTexture = ClientAccess.zioMinecraft.getMainRenderTarget().getColorTextureView();
 
       try (RenderPass renderPass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Blit render target", outputTexture, OptionalInt.empty())) {
          renderPass.setPipeline(pipeline);
          RenderSystem.bindDefaultUniforms(renderPass);
-         renderPass.setIndexBuffer(indexBuffer, indices.type());
          renderPass.bindTexture("InSampler", target.getColorTextureView(), RenderSystem.getSamplerCache().getClampToEdge(filter));
-         renderPass.drawIndexed(
-            0,
-            0,
-            6,
-            1
-         );
+         renderPass.draw(0, 3);
       }
    }
 

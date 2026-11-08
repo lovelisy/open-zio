@@ -10,6 +10,7 @@
 package dev.zio.client.gui.screens;
 
 import dev.zio.client.ClientAccess;
+import dev.zio.client.ClientContext;
 import dev.zio.mixin.MinecraftAccessor;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.minecraft.client.Minecraft;
@@ -21,8 +22,11 @@ public class ConfirmGameCloseScreen extends ConfirmScreen {
    public ConfirmGameCloseScreen() {
       super(
          new CloseConfirmationHandler(),
-         Component.literal("Confirm Game Close"),
-         Component.literal("Are you sure that you want to close minecraft?")
+         Component.literal(
+            ClientContext.languageTable.getTranslationOrDefault("ui.ConfirmGameClose", "Confirm Game Close")),
+         Component.literal(
+            ClientContext.languageTable.getTranslationOrDefault(
+               "ui.ConfirmGameCloseMessage", "Are you sure that you want to close minecraft?"))
       );
    }
 

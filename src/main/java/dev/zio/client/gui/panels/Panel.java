@@ -22,6 +22,7 @@ import dev.zio.client.gui.GuiElement;
 import dev.zio.client.render.FontRenderer;
 import dev.zio.client.gui.ScissorStack;
 import dev.zio.client.render.GuiScaleUtils;
+import dev.zio.client.render.text.LanguageTable;
 import dev.zio.client.modules.client.UIModule;
 import dev.zio.client.settings.NamedEntry;
 
@@ -147,13 +148,7 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
          guiScale = clientScreen.getGuiScale();
       }
 
-      return (int)(
-         (
-               ClientAccess.zioMinecraft.getWindow().getGuiScaledHeight()
-                  - (50)
-            )
-            / guiScale
-      );
+      return (int)((GuiScaleUtils.getBaseScaledHeight() - 50) / guiScale);
    }
 
    @Override
@@ -263,6 +258,11 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
    @Override
    public String getName() {
       return this.name;
+   }
+
+   protected static String lang(String key, String fallback) {
+      LanguageTable table = ClientContext.languageTable;
+      return table == null ? fallback : table.getTranslationOrDefault("ui." + key, fallback);
    }
 
    public Panel(String name) {
@@ -395,7 +395,7 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
       FontRenderer.INSTANCE
          .drawWithShadow(
             poseStack,
-            this.name,
+            ClientContext.languageTable.getTranslationOrDefault("ui." + this.name, this.name),
             this.x
                + (2),
             this.y

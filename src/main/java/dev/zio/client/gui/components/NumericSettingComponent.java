@@ -213,7 +213,7 @@ public class NumericSettingComponent<N extends Number> extends SettingComponent<
       if (this.editing) {
          displayText = this.inputText;
       } else {
-         displayText = String.format("%s: %s", this.setting.getName(), valueText);
+         displayText = String.format("%s: %s", this.getDisplayName(), valueText);
       }
 
       String editingCursorText = this.editing ? "_" : "";

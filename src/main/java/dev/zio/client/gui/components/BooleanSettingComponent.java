@@ -72,7 +72,7 @@ public class BooleanSettingComponent extends SettingComponent<Boolean> {
          );
       }
 
-      String settingName = this.setting.getName();
+      String settingName = this.getDisplayName();
       if (!settingName.isEmpty()) {
          this.renderWithTextScroll(
             poseStack,

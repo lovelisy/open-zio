@@ -21,6 +21,7 @@ import dev.zio.client.ClientContext;
 import dev.zio.client.gui.panels.Panel;
 import dev.zio.client.gui.screens.ClientScreen;
 import dev.zio.client.modules.PermanentModule;
+import dev.zio.client.render.text.LanguageTable;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.util.Mth;
@@ -31,6 +32,11 @@ public abstract class AbstractComponent implements ClientAccess, GuiElement {
    protected int yOffset;
    protected int flags;
    protected boolean hovered = false;
+
+   protected static String lang(String key, String fallback) {
+      LanguageTable table = ClientContext.languageTable;
+      return table == null ? fallback : table.getTranslationOrDefault("ui." + key, fallback);
+   }
 
    @Override
    public int getYOffset() {

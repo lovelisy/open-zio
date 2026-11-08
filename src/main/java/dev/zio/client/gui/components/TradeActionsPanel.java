@@ -41,7 +41,7 @@ public class TradeActionsPanel extends Panel implements ClientAccess {
          )
       );
       this.registerChild(
-         new ActionButtonComponent(this, "Edit", this::openEditor)
+         new ActionButtonComponent(this, lang("Edit", "Edit"), this::openEditor)
       );
       this.registerChild(
          new ActionButtonComponent(
@@ -51,7 +51,7 @@ public class TradeActionsPanel extends Panel implements ClientAccess {
          )
       );
       this.registerChild(
-         new ActionButtonComponent(this, "Cancel", this::showCreatePanel)
+         new ActionButtonComponent(this, lang("Cancel", "Cancel"), this::showCreatePanel)
       );
    }
 
@@ -91,8 +91,8 @@ public class TradeActionsPanel extends Panel implements ClientAccess {
    private String getDeleteButtonLabel() {
       return this.deleteConfirmationTimer
             .hasElapsed(1000L)
-         ? "Delete"
-         : "Are you sure?";
+         ? lang("Delete", "Delete")
+         : lang("AreYouSure", "Are you sure?");
    }
 
 }

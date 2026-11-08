@@ -118,6 +118,7 @@ public final class ModuleRegistry extends Registry<Module> implements ClientAcce
       if (!this.registerModule(new dev.zio.client.modules.render.BordersModule())) throw new IllegalStateException("Registration rejected BordersModule");
       if (!this.registerModule(new dev.zio.client.modules.combat.BowAimModule())) throw new IllegalStateException("Registration rejected BowAimModule");
       if (!this.registerModule(new dev.zio.client.modules.render.BreakHighlightModule())) throw new IllegalStateException("Registration rejected BreakHighlightModule");
+      if (!this.registerModule(new dev.zio.client.modules.client.CapesModule())) throw new IllegalStateException("Registration rejected CapesModule");
       if (!this.registerModule(new dev.zio.client.modules.render.ChamsModule())) throw new IllegalStateException("Registration rejected ChamsModule");
       if (!this.registerModule(new dev.zio.client.modules.misc.ChatFilterModule())) throw new IllegalStateException("Registration rejected ChatFilterModule");
       if (!this.registerModule(new dev.zio.client.modules.misc.ChestSearchBarModule())) throw new IllegalStateException("Registration rejected ChestSearchBarModule");

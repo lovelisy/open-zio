@@ -21,7 +21,6 @@ import dev.zio.client.render.RenderTargetUtils;
 import dev.zio.client.render.GuiDrawUtils;
 import dev.zio.client.utils.math.Vec3Utils;
 import dev.zio.client.utils.combat.TotemPopTracker;
-import dev.zio.client.utils.math.MathConstants;
 import dev.zio.client.managers.RotationManager;
 import dev.zio.client.render.MeshBuffer;
 import dev.zio.client.managers.AliasRegistry;
@@ -116,7 +115,6 @@ import net.minecraft.world.phys.Vec3;
 public class NameTagsModule extends Module {
    public static final Supplier NAME_TAG_RENDER_TARGET;
    private static final Identifier ICON_TEXTURE;
-   private static final StringBuilder textScratch;
    private static AnimationsModule animationsModule;
    private static FreecamModule freecamModule;
    private static FontsModule fontsModule;
@@ -220,7 +218,6 @@ public class NameTagsModule extends Module {
    static {
       NAME_TAG_RENDER_TARGET = RenderTargetRegistry.createLazyRenderTarget("nametags_temp");
       ICON_TEXTURE = Identifier.fromNamespaceAndPath("zio", "textures/zio.png");
-      textScratch = new StringBuilder();
       animationsModule = (AnimationsModule)ClientContext.getModule(AnimationsModule.class);
       freecamModule = (FreecamModule)ClientContext.getModule(FreecamModule.class);
       fontsModule = (FontsModule)ClientContext.getModule(FontsModule.class);
@@ -487,42 +484,17 @@ public class NameTagsModule extends Module {
                }
             }
          }
-         if (stack.isDamageableItem()) {
-            Setting<DurabilityChoice> durability2Option = this.durabilitySetting;
-            if (durability2Option.getValue() != NameTagsModule.DurabilityChoice.HIDE) {
-               float durabilityBaseY = y * scale;
-               float durabilityPaddedY = durabilityBaseY - 4.0F;
-               float durabilityY = durabilityPaddedY - (float)FontRenderer.INSTANCE.getHeight();
-               if (!showItemDetails) {
-                  durabilityY = y - (float)FontRenderer.INSTANCE.getHeight();
-               }
-               byte emptyTextLength = 0;
-               StringBuilder clearTextBuilder = textScratch;
-               clearTextBuilder.setLength(emptyTextLength);
-               StringBuilder percentValueBuilder = textScratch;
-               percentValueBuilder.append(durabilityPercent);
-               StringBuilder percentSuffixBuilder = textScratch;
-               percentSuffixBuilder.append("%");
-               ColorsSchemeChoice durabilityColorScheme = colorsModule.schemeSetting.getValue();
-               Color vanillaDurabilityColor = new Color(stack.getBarColor(), false);
-               Color durabilityColor = durabilityColorScheme.transform(vanillaDurabilityColor);
-               this.hasDurabilityText = true;
-               StringBuilder durabilityTextBuilder = textScratch;
-               String durabilityText = durabilityTextBuilder.toString();
-               float durabilityBaseX = (float)(
-                  (x - MathConstants.HALF) * scale
-               );
-               float durabilityX = durabilityBaseX + 1.0F;
-               double durabilityTextScale = scale * 1.5F;
-               NameTagsModule.TextAlignment durabilityAlignment = NameTagsModule.TextAlignment.LEFT;
-               this.drawText(
-                  poses, durabilityText, durabilityX, durabilityY, durabilityTextScale, durabilityColor, false, durabilityAlignment
-               );
-               return;
-            }
+         if (stack.isDamageableItem() && this.durabilitySetting.getValue() != DurabilityChoice.HIDE) {
+            float durabilityY = (showItemDetails ? y * scale - 4.0F : y) - FontRenderer.INSTANCE.getHeight();
+            Color durabilityColor = colorsModule.schemeSetting.getValue().transform(new Color(stack.getBarColor(), false));
+            this.hasDurabilityText = true;
+            this.drawText(
+               poses, durabilityPercent + "%", x * scale, durabilityY, scale * 1.5F, durabilityColor, false, TextAlignment.CENTER
+            );
          }
       }
    }
+
    private void renderEquipment(PoseStack poses, Player player) {
       int maximumEnchantRows = -3;
       for (ItemStack stack : this.equipmentItems) {
@@ -690,7 +662,7 @@ public class NameTagsModule extends Module {
       originalGlint = (Double)glintOptionSnapshot.get();
       double restoredGlint = originalGlint * 2.0D;
       glintOptionSnapshot.set(restoredGlint);
-      GuiDrawUtils.flush(true);
+      GuiDrawUtils.flush(ClientRenderTypes.worldTagQuads(), true);
    }
    @EventHandler
    private void refreshVisibleEntities(MinecraftRunTickEvent event) {

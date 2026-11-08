@@ -45,7 +45,6 @@ import dev.zio.client.managers.WaypointRegistry;
 import dev.zio.client.managers.WebhookManager;
 import dev.zio.client.managers.WorldStateManager;
 import dev.zio.client.render.FeatureBoxRenderer;
-import dev.zio.client.render.FontSupport;
 import dev.zio.client.render.text.LanguageTable;
 import dev.zio.client.utils.FrameTiming;
 import dev.zio.client.utils.combat.TotemPopTracker;
@@ -72,7 +71,6 @@ public final class ClientInitializer {
       ClientContext.baritoneBridge = FabricLoader.getInstance().isModLoaded("baritone-meteor")
          ? new BaritoneAdapter() : new DisabledBaritoneBridge();
       ClientContext.waypointAdapter = new DisabledWaypointAdapter();
-      FontSupport.initialize();
       ClientContext.languageTable = new LanguageTable();
       ClientContext.inputOverrides = new InputOverrideManager();
       ClientContext.blockColorRegistry = new BlockColorRegistry();

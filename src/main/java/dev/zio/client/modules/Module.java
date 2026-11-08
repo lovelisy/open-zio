@@ -142,8 +142,11 @@ public class Module extends NamedFeature implements Toggleable, ClientAccess, Re
    @Override
    public String getDescription() {
       LanguageTable languageTable = ClientContext.languageTable;
-      String translationKey = this.descriptionTranslationKey;
       String defaultDescription = super.getDescription();
+      if (!languageTable.isChineseEnabled()) {
+         return defaultDescription;
+      }
+      String translationKey = this.descriptionTranslationKey;
       return languageTable.getTranslationOrDefault(translationKey, defaultDescription);
    }
 
@@ -234,6 +237,9 @@ public class Module extends NamedFeature implements Toggleable, ClientAccess, Re
    public String getInfoString() {
       AliasRegistry aliasRegistry = ClientContext.aliasRegistry;
       String moduleAlias = AliasRegistry.getModuleAlias(aliasRegistry, this);
+      if (moduleAlias.equals(this.getName())) {
+         moduleAlias = ClientContext.languageTable.translateModule(moduleAlias);
+      }
       String infoSuffix;
       if (this.getInfo() != null) {
          String openingColor = String.valueOf(ChatFormatting.GRAY);

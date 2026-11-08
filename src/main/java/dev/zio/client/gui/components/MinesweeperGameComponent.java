@@ -264,7 +264,7 @@ public class MinesweeperGameComponent extends GridGameComponent {
       String[] lines = new String[2];
       lines[0] = "You done it!";
       int displayedScore = this.score;
-      lines[1] = "Score " + displayedScore;
+      lines[1] = lang("Score", "Score") + " " + displayedScore;
 
       for (String line : lines) {
          float textX = this.getPanel()

@@ -22,9 +22,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.annotations.SerializedName;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import java.awt.Desktop;
 import java.net.URI;
-import java.net.URL;
 import java.net.http.HttpRequest;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -37,6 +35,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Util;
 import net.minecraft.network.chat.MutableComponent;
 
 public final class NamehistoryCommand extends Command {
@@ -98,13 +97,10 @@ public final class NamehistoryCommand extends Command {
       ArgumentBuilder openArgument = Command.argument("name", new PlayerNameArgumentType())
          .executes((com.mojang.brigadier.Command<Object>)openContext -> {
             try {
-               Desktop desktop = Desktop.getDesktop();
-
-               URL profileUrl = new URL(
+               URI profileUri = new URI(
                   "https://namemc.com/profile/" + String.valueOf((String)openContext.getArgument("name", String.class))
                );
-               URI profileUri = profileUrl.toURI();
-               desktop.browse(profileUri);
+               Util.getPlatform().openUri(profileUri);
             } catch (Throwable ignoredBrowserFailure) {
             }
 

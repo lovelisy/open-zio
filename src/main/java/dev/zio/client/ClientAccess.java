@@ -38,10 +38,6 @@ public interface ClientAccess {
          || ClientAccess.zioMinecraft.level == null;
    }
 
-   static boolean hasBundledLanguageResource() {
-      return ClientAccess.class.getResource("/assets/zio/lang/en_us.ini") != null;
-   }
-
    static String getVersion() {
       return ZioClient.VERSION;
    }

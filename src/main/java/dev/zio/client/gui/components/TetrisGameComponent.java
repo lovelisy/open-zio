@@ -151,7 +151,7 @@ public class TetrisGameComponent extends GridGameComponent {
 
       if (this.gameOver) {
          int score = this.clearedLines;
-         String gameOverText = "Score " + score + ". Press R.";
+         String gameOverText = lang("Score", "Score") + " " + score + ". " + lang("PressR", "Press R.");
          FontRenderer.INSTANCE
             .drawWithShadow(
                poseStack,

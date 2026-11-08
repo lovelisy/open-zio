@@ -133,7 +133,7 @@ public class SnakeGameComponent extends GridGameComponent {
 
       if (this.gameOver) {
          int displayedScore = this.score;
-         String gameOverText = "Score " + displayedScore + ". Press R.";
+         String gameOverText = lang("Score", "Score") + " " + displayedScore + ". " + lang("PressR", "Press R.");
          FontRenderer.INSTANCE
             .drawWithShadow(
                poseStack,

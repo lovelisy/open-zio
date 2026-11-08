@@ -13,10 +13,11 @@ import dev.zio.client.ClientAccess;
 import dev.zio.client.ClientContext;
 import dev.zio.client.modules.client.FontsModule;
 import dev.zio.client.modules.player.NameProtectModule;
-import dev.zio.client.settings.options.FontsStyleChoice;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.Color;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import net.minecraft.client.gui.Font.DisplayMode;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
@@ -24,17 +25,24 @@ import net.minecraft.util.ARGB;
 
 public final class FontRenderer implements ClientAccess {
    private static final NameProtectModule nameProtect = (NameProtectModule)ClientContext.getModule(NameProtectModule.class);
+   private static final Queue<AtlasTextRenderer> pendingRelease = new ConcurrentLinkedQueue<>();
    public static final FontRenderer INSTANCE = new FontRenderer();
    private AtlasTextRenderer renderer;
 
    public AtlasTextRenderer createRenderer() {
       FontsModule fonts = FontsModule.INSTANCE;
-      return AtlasTextRenderer.create(
-         fonts.fontSetting.getValue(),
-         fonts.sizeSetting.getValue() * 2,
-         fonts.styleSetting.getValue(),
-         fonts.getLanguages()
-      );
+      FontEntry entry = SystemFonts.find(fonts.fontSetting.getValue());
+      return AtlasTextRenderer.create(FontAtlas.PIXEL_HEIGHT, computeScale(), entry);
+   }
+
+   public void updateScale() {
+      if (this.renderer != null) {
+         this.renderer.setScale(computeScale());
+      }
+   }
+
+   private static float computeScale() {
+      return FontsModule.INSTANCE.sizeSetting.getValue() * 2.0F / FontAtlas.PIXEL_HEIGHT * FontAtlas.LAYOUT_SCALE;
    }
 
    public int getHeight() {
@@ -51,6 +59,10 @@ public final class FontRenderer implements ClientAccess {
    }
 
    public void flush() {
+      AtlasTextRenderer stale;
+      while ((stale = pendingRelease.poll()) != null) {
+         stale.release();
+      }
       this.getRenderer().flush();
    }
 
@@ -117,6 +129,10 @@ public final class FontRenderer implements ClientAccess {
 
    public void setRenderer(AtlasTextRenderer renderer) {
       if (renderer != null) {
+         AtlasTextRenderer previous = this.renderer;
+         if (previous != null) {
+            pendingRelease.add(previous);
+         }
          this.renderer = renderer;
       }
    }

@@ -58,7 +58,7 @@ public class RegistrySetSettingComponent<E> extends SettingComponent<java.util.S
                - 0.5F,
             this.getUiModule().colorSetting.getValue()
          );
-         String settingName = this.setting.getName();
+         String settingName = this.getDisplayName();
          String selectionCount = "[%d]"
             .formatted((this.setting.getValue()).size());
          float textY = this.panel

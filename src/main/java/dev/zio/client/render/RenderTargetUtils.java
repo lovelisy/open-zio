@@ -12,27 +12,29 @@ package dev.zio.client.render;
 import dev.zio.client.ClientAccess;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import dev.zio.mixin.MinecraftAccessor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import org.apache.commons.io.IOUtils;
 
 public final class RenderTargetUtils implements ClientAccess {
-   private static RenderTarget savedMainRenderTarget;
+   private static final Deque<TargetState> savedTargets = new ArrayDeque<>();
 
    public static void popFramebuffer() {
       ((LevelRendererFramebufferAccess)ClientAccess.zioMinecraft.levelRenderer).zio$popFramebuffer();
    }
 
    public static void restoreRenderTargets() {
+      TargetState previous = savedTargets.pop();
       popFramebuffer();
-      if (savedMainRenderTarget != null) {
-         setMainRenderTarget(
-            savedMainRenderTarget
-         );
-         savedMainRenderTarget = null;
-      }
+      setMainRenderTarget(previous.mainTarget());
+      RenderSystem.outputColorTextureOverride = previous.colorOverride();
+      RenderSystem.outputDepthTextureOverride = previous.depthOverride();
    }
 
    private RenderTargetUtils() {
@@ -45,10 +47,20 @@ public final class RenderTargetUtils implements ClientAccess {
    }
 
    public static void overrideRenderTargets(RenderTarget target) {
-      savedMainRenderTarget = ClientAccess.zioMinecraft.getMainRenderTarget();
+      TargetState previous = new TargetState(
+         ClientAccess.zioMinecraft.getMainRenderTarget(),
+         RenderSystem.outputColorTextureOverride,
+         RenderSystem.outputDepthTextureOverride
+      );
       pushFramebuffer(target);
+      savedTargets.push(previous);
       setMainRenderTarget(target);
+      // RenderType prefers these overrides over its render target.
+      RenderSystem.outputColorTextureOverride = null;
+      RenderSystem.outputDepthTextureOverride = null;
    }
+
+   private record TargetState(RenderTarget mainTarget, GpuTextureView colorOverride, GpuTextureView depthOverride) {}
 
    public static void setMainRenderTarget(RenderTarget target) {
       ((MinecraftAccessor)ClientAccess.zioMinecraft).zio$setFramebuffer(target);

@@ -108,6 +108,12 @@ public final class ClientRenderPipelines {
       )
       .withLocation("pipeline/gui_trigs")
       .build();
+   public static final RenderPipeline WORLD_TAG_QUADS = RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
+      .withLocation("pipeline/zio_world_tag_quads")
+      .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+      .withDepthWrite(false)
+      .withCull(false)
+      .build();
    public static final RenderPipeline WORLD_FILL = RenderPipeline.builder(
          RenderPipelines.DEBUG_FILLED_SNIPPET
       )
@@ -195,7 +201,7 @@ public final class ClientRenderPipelines {
       .withDepthWrite(false)
       .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
       .withBlend(BlendFunction.TRANSLUCENT)
-      .withVertexFormat(DefaultVertexFormat.POSITION, Mode.QUADS)
+      .withVertexFormat(DefaultVertexFormat.EMPTY, Mode.TRIANGLES)
       .build();
    public static final RenderPipeline BLIT_LIGHTNING = RenderPipeline.builder(
 
@@ -207,7 +213,7 @@ public final class ClientRenderPipelines {
       .withDepthWrite(false)
       .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
       .withBlend(BlendFunction.LIGHTNING)
-      .withVertexFormat(DefaultVertexFormat.POSITION, Mode.QUADS)
+      .withVertexFormat(DefaultVertexFormat.EMPTY, Mode.TRIANGLES)
       .build();
    public static final RenderPipeline BLIT_PREMULTIPLIED_ALPHA = RenderPipeline.builder(
 
@@ -219,7 +225,7 @@ public final class ClientRenderPipelines {
       .withDepthWrite(false)
       .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
       .withBlend(BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA)
-      .withVertexFormat(DefaultVertexFormat.POSITION, Mode.QUADS)
+      .withVertexFormat(DefaultVertexFormat.EMPTY, Mode.TRIANGLES)
       .build();
    public static final RenderPipeline BLIT_NO_BLEND = RenderPipeline.builder(
 
@@ -231,7 +237,7 @@ public final class ClientRenderPipelines {
       .withDepthWrite(false)
       .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
       .withoutBlend()
-      .withVertexFormat(DefaultVertexFormat.POSITION, Mode.QUADS)
+      .withVertexFormat(DefaultVertexFormat.EMPTY, Mode.TRIANGLES)
       .build();
    public static final RenderPipeline AMBIENCE = RenderPipeline.builder(
 

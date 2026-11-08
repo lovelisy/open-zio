@@ -19,7 +19,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MainMixin {
 
    @Inject(method = "main*", at = @At("HEAD"), remap = false)
-   private static void enableAwtAtStartup(CallbackInfo callback) {
-      System.setProperty("java.awt.headless", "false");
+   private static void configureAwtAtStartup(CallbackInfo callback) {
+      // Keep AWT from starting a second window toolkit alongside GLFW on macOS.
+      boolean macOs = System.getProperty("os.name", "").startsWith("Mac");
+      System.setProperty("java.awt.headless", Boolean.toString(macOs));
    }
 }

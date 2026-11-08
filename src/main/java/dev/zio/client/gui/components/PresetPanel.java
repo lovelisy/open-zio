@@ -26,9 +26,9 @@ import dev.zio.client.settings.StringSetting;
 import dev.zio.client.settings.options.PresetCategory;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import java.awt.Desktop;
 import java.io.IOException;
 import java.nio.file.Path;
+import net.minecraft.util.Util;
 import org.apache.commons.lang3.SystemUtils;
 
 public class PresetPanel extends Panel {
@@ -118,12 +118,12 @@ public class PresetPanel extends Panel {
                )
             );
             this.addChild(
-               new ActionButtonComponent(this, "Refresh", this::requestListRefresh)
+               new ActionButtonComponent(this, lang("Refresh", "Refresh"), this::requestListRefresh)
             );
             this.addChild(
                new ActionButtonComponent(
                   this,
-                  "Undo",
+                  lang("Undo", "Undo"),
                   () -> {
                      try {
                         ClientContext.configurationManager.getPresetUndoState().undo();
@@ -139,13 +139,13 @@ public class PresetPanel extends Panel {
             this.addChild(
                new ButtonComponent(
                   this,
-                  "Preset " + this.selectedPreset.getName()
+                  lang("Preset", "Preset") + " " + this.selectedPreset.getName()
                )
             );
             this.addChild(
                new ActionButtonComponent(
                   this,
-                  "Load",
+                  lang("Load", "Load"),
                   () -> {
                      PresetUndoAction action = PresetUndoAction.beforeLoad(this.selectedPreset.getName());
                      if (this.getSelectedCategoryPresets().applyPreset(this.selectedPreset.getName())) {
@@ -157,7 +157,7 @@ public class PresetPanel extends Panel {
             this.addChild(
                new ActionButtonComponent(
                   this,
-                  "Save",
+                  lang("Save", "Save"),
                   () -> {
                      try {
                         PresetUndoAction action = PresetUndoAction.beforeSave(
@@ -177,7 +177,7 @@ public class PresetPanel extends Panel {
             this.addChild(
                new ActionButtonComponent(
                   this,
-                  "Delete",
+                  lang("Delete", "Delete"),
                   () -> {
                      PresetUndoAction action = PresetUndoAction.beforeDelete(
                         this.getSelectedCategoryPresets(), this.selectedPreset.getName()
@@ -190,12 +190,12 @@ public class PresetPanel extends Panel {
                )
             );
             this.addChild(
-               new ActionButtonComponent(this, "Open", this::openPresetLocation)
+               new ActionButtonComponent(this, lang("Open", "Open"), this::openPresetLocation)
             );
             this.addChild(
                new ActionButtonComponent(
                   this,
-                  "Back",
+                  lang("Back", "Back"),
                   () -> this.setMode(PresetPanelMode.NEW)
                )
             );
@@ -235,13 +235,7 @@ public class PresetPanel extends Panel {
    private void openPresetLocation() {
       try {
          if (!SystemUtils.IS_OS_WINDOWS_10 && !SystemUtils.OS_NAME.startsWith("Windows 11")) {
-            Desktop.getDesktop()
-               .open(
-                  this.screen
-                     .getSelectedCategory()
-                     .getDirectory()
-                     .toFile()
-               );
+            Util.getPlatform().openPath(this.screen.getSelectedCategory().getDirectory());
          } else {
             Path path = this.screen
                .getSelectedCategory()

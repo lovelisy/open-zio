@@ -26,7 +26,7 @@ import dev.zio.client.settings.ColorSetting;
 import dev.zio.client.settings.NumberSetting;
 import dev.zio.client.settings.Setting;
 import dev.zio.client.utils.ElapsedTimer;
-import dev.zio.client.utils.entity.EntityUtils;
+import dev.zio.client.utils.entity.PlayerStateUtils;
 import dev.zio.client.utils.entity.SwingAction;
 import dev.zio.client.utils.inventory.InventoryUtils;
 import dev.zio.client.utils.network.PacketSender;
@@ -122,19 +122,29 @@ public final class PistonCrystalModule extends Module {
       }
       this.stageTracker.update();
       this.selectPowerItem();
-      this.target = this.selectTarget();
-      if (this.target == null) {
+      Player nextTarget = this.selectTarget();
+      if (nextTarget != this.target) {
          this.plan = null;
          this.resetStages();
+         this.target = nextTarget;
+      }
+      if (this.target == null || multiTask.shouldPauseModule(this)) {
          return;
       }
-      if (multiTask.shouldPauseModule(this)) {
+
+      PistonCrystalPlan nextPlan = this.planner.findPlan(this.target);
+      if (nextPlan == null) {
+         // A piston head can make the original crystal cell invalid for placement after a push.
+         if (this.plan != null && this.powerPlaced && this.crystalPlaced
+            && this.stageTracker.isPending(PistonCrystalStageTracker.Kind.CRYSTAL, this.plan.crystalPosition())) {
+            this.attackCrystals(false);
+         } else {
+            this.plan = null;
+            this.resetStages();
+         }
          return;
       }
-      this.plan = this.planner.findPlan(this.target);
-      if (this.plan == null) {
-         return;
-      }
+      this.plan = nextPlan;
       if (this.pistonPlaced && this.crystalPlaced && this.powerPlaced && this.cycleTimer.hasElapsed(this.delaySetting.getValue())) {
          this.resetStages();
       }
@@ -161,7 +171,7 @@ public final class PistonCrystalModule extends Module {
       double distance = this.targetRangeSetting.getValue();
       for (Player candidate : ClientAccess.zioMinecraft.level.players()) {
          if (candidate == ClientAccess.zioMinecraft.player || candidate.isSpectator() || candidate.getHealth() <= 0.0F
-            || ClientContext.socialRegistry.isFriendPlayer(candidate) || !EntityUtils.hasCollisionBelow(candidate)) {
+            || ClientContext.socialRegistry.isFriendPlayer(candidate) || !PlayerStateUtils.hasArmor(candidate)) {
             continue;
          }
          double candidateDistance = ClientAccess.zioMinecraft.player.getEyePosition().distanceTo(candidate.position());
@@ -319,7 +329,7 @@ public final class PistonCrystalModule extends Module {
       if (InventoryUtils.findSwapSlot(Items.REDSTONE_BLOCK, this.alternativeSetting.getValue()).isFound()) {
          this.powerItem = Items.REDSTONE_BLOCK;
       } else if (InventoryUtils.findSwapSlot(Items.REDSTONE_TORCH, this.alternativeSetting.getValue()).isFound()) {
-         this.powerItem = Items.TORCH;
+         this.powerItem = Items.REDSTONE_TORCH;
       } else {
          this.powerItem = Items.AIR;
       }

@@ -193,8 +193,8 @@ public class ColorSettingComponent extends SettingComponent<Color> implements Cl
          return;
       }
 
-      this.renderWithTextScroll(poses, this.setting.getName(), () -> FontRenderer.INSTANCE.drawWithShadow(
-         poses, this.setting.getName(), this.panel.getX() + 4,
+      this.renderWithTextScroll(poses, this.getDisplayName(), () -> FontRenderer.INSTANCE.drawWithShadow(
+         poses, this.getDisplayName(), this.panel.getX() + 4,
          this.panel.getY() + this.getTextYOffset() - this.getHoverAnimationValue() + this.yOffset,
          this.getUiModule().textColorSetting.getValue()
       ));
@@ -358,14 +358,14 @@ public class ColorSettingComponent extends SettingComponent<Color> implements Cl
       @Override
       public void render(PoseStack poses, double mouseX, double mouseY) {
          super.render(poses, mouseX, mouseY);
-         drawCenteredLabel(poses, "Sync", this.panel, this.yOffset, this.getTextYOffset(), this.getHoverAnimationValue(),
+         drawCenteredLabel(poses, lang("Sync", "Sync"), this.panel, this.yOffset, this.getTextYOffset(), this.getHoverAnimationValue(),
             this.getUiModule().textColorSetting.getValue());
       }
    }
 
    private static class PasteControl extends ColorActionButton {
       PasteControl(int yOffset, ColorSettingComponent editor) {
-         super(yOffset, editor, "Paste", () -> {
+         super(yOffset, editor, lang("Paste", "Paste"), () -> {
             try {
                Color pasted = ColorUtils.parseHexColor(ClientAccess.zioMinecraft.keyboardHandler.getClipboard().trim());
                editor.updateHsbFromColor(pasted);
@@ -385,9 +385,9 @@ public class ColorSettingComponent extends SettingComponent<Color> implements Cl
       @Override
       public String getName() {
          if (!this.editor.invalidPasteTimer.hasElapsed(1000L)) {
-            return "Invalid";
+            return lang("Invalid", "Invalid");
          }
-         return this.editor.pasteTimer.hasElapsed(1000L) ? super.getName() : "Pasted";
+         return this.editor.pasteTimer.hasElapsed(1000L) ? super.getName() : lang("Pasted", "Pasted");
       }
 
       @Override
@@ -404,7 +404,7 @@ public class ColorSettingComponent extends SettingComponent<Color> implements Cl
 
    private static class CopyControl extends ColorActionButton {
       CopyControl(int yOffset, ColorSettingComponent editor) {
-         super(yOffset, editor, "Copy", () -> {
+         super(yOffset, editor, lang("Copy", "Copy"), () -> {
             ClientAccess.zioMinecraft.keyboardHandler.setClipboard(ColorUtils.toHex(editor.getSelectedColor(), true));
             editor.copyTimer.reset();
          });
@@ -417,7 +417,7 @@ public class ColorSettingComponent extends SettingComponent<Color> implements Cl
 
       @Override
       public String getName() {
-         return this.editor.copyTimer.hasElapsed(1000L) ? super.getName() : "Copied";
+         return this.editor.copyTimer.hasElapsed(1000L) ? super.getName() : lang("Copied", "Copied");
       }
 
       @Override
@@ -442,7 +442,7 @@ public class ColorSettingComponent extends SettingComponent<Color> implements Cl
       @Override
       public void render(PoseStack poses, double mouseX, double mouseY) {
          super.render(poses, mouseX, mouseY);
-         drawCenteredLabel(poses, "Rainbow", this.panel, this.yOffset, this.getTextYOffset(), this.getHoverAnimationValue(),
+         drawCenteredLabel(poses, lang("Rainbow", "Rainbow"), this.panel, this.yOffset, this.getTextYOffset(), this.getHoverAnimationValue(),
             this.getUiModule().textColorSetting.getValue());
       }
    }

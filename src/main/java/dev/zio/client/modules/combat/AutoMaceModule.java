@@ -118,7 +118,7 @@ public final class AutoMaceModule extends Module {
          int chestContainerSlot = chestSlotType.getContainerSlot();
          InventoryUtils.swapMenuSlots(swapSlot, chestContainerSlot);
 
-         if (PlayerStateUtils.isLocalWearingElytra()) {
+         if (PlayerStateUtils.isLocalWearingElytra() && !ClientAccess.zioMinecraft.player.onGround()) {
             this.startGliding();
          }
 
@@ -581,14 +581,12 @@ public final class AutoMaceModule extends Module {
                } else {
                   if (ClientAccess.zioMinecraft.player.onGround()) {
                      this.striking = false;
-                  } else {
-                     double playerY = ClientAccess.zioMinecraft.player.getY();
-
-                     double targetY = this.target.getY();
-                     Entity sizeTarget = this.target;
-                     if (playerY < targetY - sizeTarget.getBbHeight()) {
-                        this.striking = false;
-                     }
+                     this.strikeTimer.reset();
+                     return;
+                  }
+                  double playerY = ClientAccess.zioMinecraft.player.getY();
+                  if (playerY < this.target.getY() - this.target.getBbHeight()) {
+                     this.striking = false;
                   }
 
                   Object auraRangeValue = aura.rangeSetting.getValue();

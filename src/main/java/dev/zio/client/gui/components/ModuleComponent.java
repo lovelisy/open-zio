@@ -286,6 +286,7 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
          case dev.zio.client.settings.NumberSetting<?> value -> new NumericSettingComponent<>(panel, this, value);
          case dev.zio.client.settings.ColorSetting value -> new ColorSettingComponent(panel, this, value);
          case dev.zio.client.settings.StringSetting value -> new StringSettingComponent(panel, this, value);
+         case dev.zio.client.settings.FontSetting value -> new FontSettingComponent(panel, this, value);
          case dev.zio.client.settings.EnumSetting<?> value -> new EnumSettingComponent<>(panel, this, value);
          case dev.zio.client.settings.IdentifierSetting value -> new SoundSettingComponent(panel, this, value);
          default -> null;
@@ -398,7 +399,7 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
       FontRenderer.INSTANCE
          .drawWithShadow(
             poseStack,
-            this.module.getName(),
+            ClientContext.languageTable.translateModule(this.module.getName()),
             this.panel
                   .getX()
                + (3),
@@ -437,7 +438,7 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
 
       MutableComponent statusText = Component.empty();
       if (this.module.isWip()) {
-         statusText.append("beta ");
+         statusText.append(ClientContext.languageTable.getTranslationOrDefault("ui.Beta", "beta") + " ");
       }
 
       if (this.getUiModule().bindsSetting.getValue()
@@ -448,7 +449,7 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
          String bindingName = this.module
             .getKeybind()
             .getDisplayName();
-         statusText.append("[").append(bindingName.toUpperCase(Locale.ROOT)).append("]");
+         statusText.append("[").append(bindingName).append("]");
       }
 
       if (!statusText.getSiblings().isEmpty()) {
@@ -466,7 +467,7 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
                      .getX()
                   + FontRenderer.INSTANCE
                      .getWidth(
-                        this.module.getName()
+                        ClientContext.languageTable.translateModule(this.module.getName())
                      )
                   + 3.0F,
                this.panel

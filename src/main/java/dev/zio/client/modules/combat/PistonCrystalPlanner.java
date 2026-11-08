@@ -177,10 +177,10 @@ final class PistonCrystalPlanner {
    private Set<Candidate> candidates(LivingEntity target) {
       int height = (int)target.getEyeHeight(target.getPose());
       Set<Candidate> candidates = new HashSet<>();
-      for (BlockPos surround : PlayerStateUtils.getSurroundPositions(target)) {
-         if (ClientAccess.zioMinecraft.level.getBlockState(surround).canBeReplaced()) {
+      for (BlockPos occupied : PlayerStateUtils.getOccupiedBlockPositions(target)) {
+         if (ClientAccess.zioMinecraft.level.getBlockState(occupied).canBeReplaced()) {
             for (Direction outward : Direction.Plane.HORIZONTAL) {
-               BlockPos position = surround.relative(outward);
+               BlockPos position = occupied.relative(outward);
                if (!BoundingBoxUtils.intersectsBlock(target.getBoundingBox(), position)) {
                   candidates.add(new Candidate(position.offset(0, height, 0), outward));
                }

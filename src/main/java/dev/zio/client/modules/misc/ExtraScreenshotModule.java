@@ -32,9 +32,9 @@ import dev.zio.client.settings.Setting;
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.platform.NativeImage;
 import java.awt.Graphics2D;
+import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -83,12 +83,17 @@ public class ExtraScreenshotModule extends Module {
       }
    }
 
+   private ModeChoice getActiveMode() {
+      ModeChoice mode = this.modeSetting.getValue();
+      return mode == ModeChoice.COPY && GraphicsEnvironment.isHeadless() ? ModeChoice.NONE : mode;
+   }
+
    public boolean isModeNone() {
-      return this.modeSetting.getValue() == ExtraScreenshotModule.ModeChoice.NONE;
+      return this.getActiveMode() == ModeChoice.NONE;
    }
 
    public void processScreenshotBytes(byte[] imageBytes) {
-      ModeChoice mode = this.modeSetting.getValue();
+      ModeChoice mode = this.getActiveMode();
       if (mode == ModeChoice.IMGUR) {
          synchronized (this) {
             if (!this.uploadTimer.hasElapsed(uploadCooldownMillis)) {
@@ -133,9 +138,11 @@ public class ExtraScreenshotModule extends Module {
          if (!"https".equalsIgnoreCase(uri.getScheme()) && !"http".equalsIgnoreCase(uri.getScheme())) {
             throw new IOException("Invalid image link");
          }
-         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(link), null);
-         var notification = Component.literal("Copied screenshot link.").withStyle(style -> style.withClickEvent(new OpenUrl(uri)));
-         ChatUtils.printChat(notification, -43296436);
+         ClientAccess.zioMinecraft.execute(() -> {
+            ClientAccess.zioMinecraft.keyboardHandler.setClipboard(link);
+            var notification = Component.literal("Copied screenshot link.").withStyle(style -> style.withClickEvent(new OpenUrl(uri)));
+            ChatUtils.printChat(notification, -43296436);
+         });
       } catch (Exception failure) {
          LOGGER.warn("Screenshot {} failed", mode == ModeChoice.COPY ? "copy" : "upload", failure);
          var message = Component.literal(mode == ModeChoice.COPY ? "Failed to copy the screenshot!" : "Failed to upload screenshot to Imgur")
@@ -156,11 +163,7 @@ public class ExtraScreenshotModule extends Module {
    }
 
    public boolean shouldDeleteFile() {
-      Setting<ModeChoice> modeOption = this.modeSetting;
-      if (modeOption.getValue() == ExtraScreenshotModule.ModeChoice.NONE) {
-         return false;
-      }
-      return this.deleteFileSetting.getValue();
+      return !this.isModeNone() && this.deleteFileSetting.getValue();
    }
 
    private void copyImageToClipboard(ClipboardImage image) {

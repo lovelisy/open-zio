@@ -5,8 +5,8 @@ An optimized recreation of Mio 2.4.4 for Minecraft 1.21.11.
 
 [![YOUTUBE](https://img.youtube.com/vi/2k92c_UstgY/0.jpg)](https://www.youtube.com/watch?v=2k92c_UstgY)
 
-# Download
-Builds can be found here or on our Gitlab mirror: https://discord.com/invite/W2cEqSf8eK
+# Discord
+Never miss our projects again: https://discord.com/invite/W2cEqSf8eK
 
 # Issues & Contributing
 
@@ -18,11 +18,13 @@ Builds can be found here or on our Gitlab mirror: https://discord.com/invite/W2c
 
 - https://youtu.be/2k92c_UstgY
 
-# Mirror
+# Download
 
-- https://git.spectrum.best/SpectrumDevs/open-zio
+[Latest successful build of Open Zio](https://git.spectrum.best/SpectrumDevs/open-zio/-/jobs/artifacts/main/raw/dist/zio.jar?job=build-client) for Minecraft 1.21.11.
 
 # Building
+
+Run Gradle with JDK 25 and have JDK 21 installed for the client toolchain.
 
 ```
 ./gradlew build
@@ -34,6 +36,4 @@ or for Windows:
 .\gradlew build
 ```
 
-- Build artifact can be found in builds/libs/
-
-Fabric Loader and Fabric API are required. Baritone Meteor for Minecraft 1.21.11 (pathfinding) and ViaFabricPlus 4.4.9 (other protocol versions) are optional and are not bundled. Development runs include both integrations.
+The built JAR is in `build/libs/`.

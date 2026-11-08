@@ -325,9 +325,11 @@ public final class GuiDrawUtils implements ClientAccess {
    }
 
    public static void flush(boolean flushText) {
-      MeshDrawContext.setRenderType(
-         ClientRenderTypes.gui()
-      );
+      flush(ClientRenderTypes.gui(), flushText);
+   }
+
+   public static void flush(RenderType quadRenderType, boolean flushText) {
+      MeshDrawContext.setRenderType(quadRenderType);
       quadBuffer.draw();
       MeshDrawContext.setRenderType(
          ClientRenderTypes.worldLines()

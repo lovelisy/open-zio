@@ -55,6 +55,15 @@ public abstract class SettingComponent<T> extends AbstractComponent {
       return this.setting;
    }
 
+   protected String getDisplayName() {
+      String fallback = this.setting.getName();
+      if (this.parentCloseState instanceof ModuleComponent parentModule) {
+         String moduleName = parentModule.getModule().getConfigName();
+         return ClientContext.languageTable.translateSetting(moduleName, this.setting.getName(), fallback);
+      }
+      return fallback;
+   }
+
    protected ClickGuiScreen getClickGui() {
       return ClientContext.getClickGui();
    }
@@ -151,6 +160,7 @@ public abstract class SettingComponent<T> extends AbstractComponent {
    public void render(PoseStack poseStack, double mouseX, double mouseY) {
       if (this.getUiModule().descriptionsSetting.getValue()
          && this.getUiModule().settingsSetting.getValue()
+         && ClientContext.languageTable.isChineseEnabled()
          && this.isMouseOver(mouseX, mouseY)
          && this.parentCloseState instanceof ModuleComponent parentModule) {
          String moduleConfigName = parentModule.getModule()
