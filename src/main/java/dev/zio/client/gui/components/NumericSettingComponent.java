@@ -205,8 +205,8 @@ public class NumericSettingComponent<N extends Number> extends SettingComponent<
          .replaceFirst("\u0001", Matcher.quoteReplacement(String.valueOf(unitText)));
       if (this.setting
          .shouldDisplayBoundaryLabel()) {
-         valueText = this.setting
-            .getBoundaryLabel();
+         String boundaryLabel = this.setting.getBoundaryLabel();
+         valueText = lang(boundaryLabel, boundaryLabel);
       }
 
       String displayText;

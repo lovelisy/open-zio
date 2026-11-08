@@ -86,7 +86,7 @@ public final class LanguageTable {
    }
 
    public String getTranslationOrDefault(String key, String fallback) {
-      return this.translations.getOrDefault(key, fallback);
+      return this.chineseEnabled ? this.translations.getOrDefault(key, fallback) : fallback;
    }
 
    public void setChineseEnabled(boolean enabled) {
