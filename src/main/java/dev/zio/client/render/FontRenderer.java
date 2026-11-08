@@ -65,6 +65,8 @@ public final class FontRenderer implements ClientAccess {
       }
       if (this.renderer != null) {
          this.renderer.flush();
+      } else {
+         AtlasTextRenderer.finishBuffers();
       }
    }
 
@@ -183,7 +185,7 @@ public final class FontRenderer implements ClientAccess {
                argb,
                true,
                poses.last().pose(),
-               ClientAccess.zioMinecraft.renderBuffers().bufferSource(),
+               AtlasTextRenderer.getBufferSource(),
                displayMode,
                0,
                15728880
@@ -223,7 +225,7 @@ public final class FontRenderer implements ClientAccess {
                argb,
                false,
                poses.last().pose(),
-               ClientAccess.zioMinecraft.renderBuffers().bufferSource(),
+               AtlasTextRenderer.getBufferSource(),
                displayMode,
                0,
                15728880

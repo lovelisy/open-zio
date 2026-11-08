@@ -58,7 +58,7 @@ public final class AtlasTextRenderer {
       this.atlas.release();
    }
 
-   public MultiBufferSource getBufferSource() {
+   public static MultiBufferSource getBufferSource() {
       return bufferSource;
    }
 

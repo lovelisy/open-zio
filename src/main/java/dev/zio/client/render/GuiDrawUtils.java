@@ -219,7 +219,7 @@ public final class GuiDrawUtils implements ClientAccess {
             color,
             shadow,
             poseStack.last().pose(),
-            ClientAccess.zioMinecraft.renderBuffers().bufferSource(),
+            AtlasTextRenderer.getBufferSource(),
             DisplayMode.NORMAL,
             0,
             15728880
