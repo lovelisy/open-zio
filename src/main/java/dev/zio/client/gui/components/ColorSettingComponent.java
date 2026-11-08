@@ -365,7 +365,7 @@ public class ColorSettingComponent extends SettingComponent<Color> implements Cl
 
    private static class PasteControl extends ColorActionButton {
       PasteControl(int yOffset, ColorSettingComponent editor) {
-         super(yOffset, editor, lang("Paste", "Paste"), () -> {
+         super(yOffset, editor, "Paste", () -> {
             try {
                Color pasted = ColorUtils.parseHexColor(ClientAccess.zioMinecraft.keyboardHandler.getClipboard().trim());
                editor.updateHsbFromColor(pasted);
@@ -404,7 +404,7 @@ public class ColorSettingComponent extends SettingComponent<Color> implements Cl
 
    private static class CopyControl extends ColorActionButton {
       CopyControl(int yOffset, ColorSettingComponent editor) {
-         super(yOffset, editor, lang("Copy", "Copy"), () -> {
+         super(yOffset, editor, "Copy", () -> {
             ClientAccess.zioMinecraft.keyboardHandler.setClipboard(ColorUtils.toHex(editor.getSelectedColor(), true));
             editor.copyTimer.reset();
          });

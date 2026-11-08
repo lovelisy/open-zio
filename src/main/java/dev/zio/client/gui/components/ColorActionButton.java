@@ -19,19 +19,19 @@ import java.awt.Color;
 
 public abstract class ColorActionButton extends AbstractComponent {
    protected final ColorSettingComponent editor;
-   protected final String label;
+   protected final String labelKey;
    protected Runnable action;
 
    public abstract float getLabelOffsetX();
 
    public String getName() {
-      return this.label;
+      return lang(this.labelKey, this.labelKey);
    }
 
-   public ColorActionButton(int yOffset, ColorSettingComponent editor, String label, Runnable action) {
+   public ColorActionButton(int yOffset, ColorSettingComponent editor, String labelKey, Runnable action) {
       super(editor.getPanel(), yOffset);
       this.editor = editor;
-      this.label = label;
+      this.labelKey = labelKey;
       this.action = action;
    }
 
