@@ -12,7 +12,6 @@ package dev.zio.client.utils.inventory;
 import dev.zio.client.utils.combat.BoundingBoxUtils;
 import dev.zio.client.utils.entity.PlayerStateUtils;
 import dev.zio.client.utils.world.BlockInteractionUtils;
-import dev.zio.client.utils.world.WorldUtils;
 
 import dev.zio.client.ClientAccess;
 import dev.zio.client.ClientContext;
@@ -163,10 +162,8 @@ public final class AutoMineHeadProvider extends AutoMineProviderBase {
       ClientLevel level = ClientAccess.zioMinecraft.level;
       BlockPos abovePosition = position.above();
       boolean aboveAllowed = level.isEmptyBlock(abovePosition) || this.isAlternateHeadModeEnabled();
-      if (!WorldUtils.canMineBlock(position) || !baseAllowed) {
-         if (!this.isAlreadyMining(position)) {
-            return false;
-         }
+      if ((!this.canStartMiningPosition(position) || !baseAllowed) && !this.isAlreadyMining(position)) {
+         return false;
       }
       return aboveAllowed;
    }

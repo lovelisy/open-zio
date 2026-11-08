@@ -172,11 +172,11 @@ public class ColorSettingComponent extends SettingComponent<Color> implements Cl
    private void updateControls(double mouseX, double mouseY) {
       int controlY = this.controlsY();
       for (GuiElement control : this.controls) {
-         control.setYOffset(controlY - this.panel.getY());
-         control.update(mouseX, mouseY);
          if (!(control instanceof ColorActionButton)) {
             controlY += this.getBaseHeight() + 3;
          }
+         control.setYOffset(controlY - this.panel.getY());
+         control.update(mouseX, mouseY);
       }
    }
 

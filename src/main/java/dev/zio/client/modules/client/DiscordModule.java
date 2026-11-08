@@ -10,6 +10,7 @@
 package dev.zio.client.modules.client;
 
 import dev.zio.client.ClientAccess;
+import dev.zio.client.ZioClient;
 import dev.zio.client.events.MinecraftTickEvent;
 import dev.zio.client.events.EventHandler;
 import dev.zio.client.utils.ElapsedTimer;
@@ -30,6 +31,7 @@ import net.minecraft.client.multiplayer.ServerData;
 
 public class DiscordModule extends Module {
    private static final org.slf4j.Logger LOGGER = com.mojang.logging.LogUtils.getLogger();
+   private static final String ICON_URL = "https://cdn.discordapp.com/app-icons/1055222411819241572/22387af3b091639d90c2335d52cf11b7.png";
    private final Setting<Boolean> serverSetting;
    private CompletableFuture<IPCClient> connectionFuture;
    private long startTimestamp;
@@ -48,7 +50,7 @@ public class DiscordModule extends Module {
    public void onEnable() {
       this.closeClient();
       CompletableFuture<IPCClient> pending = CompletableFuture.supplyAsync(() -> {
-         IPCClient client = new IPCClient(1162833254580228176L);
+         IPCClient client = new IPCClient(1055222411819241572L);
          try {
             client.connect(new DiscordBuild[0]);
             return client;
@@ -91,6 +93,7 @@ public class DiscordModule extends Module {
             return;
          }
          RichPresence.Builder presenceBuilder = new RichPresence.Builder();
+         presenceBuilder.setLargeImage(ICON_URL, "Zio v" + ZioClient.VERSION, ICON_URL);
 
          long timestamp = this.startTimestamp;
          presenceBuilder.setStartTimestamp(timestamp);

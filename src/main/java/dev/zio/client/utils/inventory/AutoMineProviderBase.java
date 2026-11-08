@@ -50,12 +50,7 @@ public abstract class AutoMineProviderBase implements ClientAccess, AutoMineProv
       if (position.equals(miningTracker.getRecentPosition())) {
          return false;
       }
-      SpeedMineModule rangeCheck = speedMine;
-      if (!rangeCheck.isInMiningRange(position)) {
-         return false;
-      }
-      SpeedMineModule blockCheck = speedMine;
-      if (!blockCheck.isBlockAllowed(position)) {
+      if (!this.canStartMiningPosition(position)) {
          return false;
       }
       Setting<Boolean> strictDirectionSetting = this.autoMine.strictDirectionSetting;
@@ -75,6 +70,10 @@ public abstract class AutoMineProviderBase implements ClientAccess, AutoMineProv
          return false;
       }
       return WorldUtils.canMineBlock(position);
+   }
+
+   protected boolean canStartMiningPosition(BlockPos position) {
+      return speedMine.isInMiningRange(position) && speedMine.isBlockAllowed(position);
    }
 
    protected boolean isAlreadyMining(BlockPos position) {

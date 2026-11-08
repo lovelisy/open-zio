@@ -245,9 +245,14 @@ public abstract class ChatComponentMixin implements ClientAccess, VisibleChatLin
 
    @Inject(method = "render(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/gui/Font;IIIZZ)V", at = @At("RETURN"))
    private void disableCustomChatText(
-      GuiGraphics graphics, Font font, int ignoredRenderInt1, int ignoredRenderInt2, int ignoredRenderInt3, boolean ignoredRenderFlag1, boolean ignoredRenderFlag2, CallbackInfo callback
+      GuiGraphics graphics, Font font, int ignoredRenderInt1, int ignoredRenderInt2, int ignoredRenderInt3, boolean focused, boolean ignoredRenderFlag2, CallbackInfo callback
    ) {
+      boolean customText = FontActiveTextCollector.customChatTextEnabled;
       FontActiveTextCollector.customChatTextEnabled = false;
+      // Focused chat queues text after the HUD has already flushed.
+      if (focused && customText) {
+         fontsModule.flushFocusedChat();
+      }
    }
 
    @Override

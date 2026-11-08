@@ -17,6 +17,7 @@ import dev.zio.client.events.ClientInitializationEvent;
 import dev.zio.client.events.EventHandler;
 import dev.zio.client.gui.screens.ClientScreen;
 import dev.zio.client.render.GuiDrawUtils;
+import dev.zio.client.render.GuiProjectionUtils;
 import dev.zio.client.render.FontRenderer;
 import dev.zio.client.render.AtlasTextRenderer;
 import dev.zio.client.render.SystemFonts;
@@ -84,6 +85,19 @@ public class FontsModule extends Module {
 
          this.queuedDraws.clear();
          GuiDrawUtils.flush(true);
+      }
+   }
+
+   public void flushFocusedChat() {
+      if (this.queuedDraws.isEmpty()) {
+         return;
+      }
+
+      GuiProjectionUtils.beginGuiProjection();
+      try {
+         this.flushQueuedDraws(new PoseStack());
+      } finally {
+         GuiProjectionUtils.restoreProjection();
       }
    }
 

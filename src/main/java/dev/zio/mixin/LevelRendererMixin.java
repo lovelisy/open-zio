@@ -24,16 +24,13 @@ import dev.zio.client.modules.render.AmbienceModule;
 import dev.zio.client.modules.render.ChamsModule;
 import dev.zio.client.ClientAccess;
 import dev.zio.client.ClientContext;
-import dev.zio.client.render.ShaderPassRenderState;
 import dev.zio.client.render.LevelRendererFramebufferAccess;
 import dev.zio.client.managers.RotationManager;
-import dev.zio.client.render.ShaderPass;
 import dev.zio.client.managers.RenderTargetRegistry;
 import dev.zio.client.render.RenderUtils;
 import dev.zio.client.render.IrisShaderBridge;
 import dev.zio.client.render.EntityRenderStateAccess;
 import dev.zio.client.events.WorldRenderEvent;
-import dev.zio.client.managers.RenderStateManager;
 import dev.zio.client.modules.player.FreecamModule;
 import dev.zio.client.events.BlockOutlineRenderEvent;
 import dev.zio.client.modules.render.NoRenderModule;
@@ -230,15 +227,7 @@ public abstract class LevelRendererMixin implements ClientAccess, LevelRendererF
          this.targets.main = skyFramePass.readsAndWrites(this.targets.main);
          skyFramePass.executes(
             () -> {
-               ShaderPass skyShader = ClientContext.shaderRegistry
-                  .getPass("sky");
-               ShaderPassRenderState.INSTANCE
-                  .configure(skyShader);
-               RenderStateManager.addStates(
-                  ShaderPassRenderState.INSTANCE
-               );
-               skyboxModule.drawShaderQuad();
-               RenderStateManager.reset();
+               ClientContext.shaderRegistry.render("sky", skyboxModule::drawShaderQuad);
                RenderUtils.INSTANCE
                   .fillRect(
                      this.worldPoseStack, 0.0F, 0.0F, 1.0F, 1.0F, 0
