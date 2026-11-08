@@ -50,7 +50,7 @@ public final class PresetImportScreen extends ClientScreen {
          .add(
             new ButtonComponent(
                this.importPanel,
-               lang("Preset", "Preset") + ": " + this.getPresetName(sourcePath)
+               () -> lang("Preset", "Preset") + ": " + this.getPresetName(sourcePath)
             )
          );
       if (this.detectedCategory != null) {
@@ -58,7 +58,7 @@ public final class PresetImportScreen extends ClientScreen {
             .registerChild(
                new ActionButtonComponent(
                   this.importPanel,
-                  lang("Import", "Import"),
+                  () -> lang("Import", "Import"),
                   () -> this.importPreset(
                      sourcePath, this.detectedCategory
                   )
@@ -81,7 +81,7 @@ public final class PresetImportScreen extends ClientScreen {
          .registerChild(
             new ActionButtonComponent(
                this.importPanel,
-               lang("Cancel", "Cancel"),
+               () -> lang("Cancel", "Cancel"),
                this::closeWithTransition
             )
          );
@@ -165,7 +165,7 @@ public final class PresetImportScreen extends ClientScreen {
    }
 
    private String getCategoryTitle(PresetCategory category) {
-      return category == null ? lang("Unknown", "Unknown") : category.getName();
+      return category == null ? "Unknown" : category.getName();
    }
 
 }

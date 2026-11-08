@@ -29,16 +29,16 @@ public class ModuleImportConfirmationScreen extends ClientScreen {
       this.returnScreen = previousScreen;
       this.module = targetModule;
       this.moduleJson = importedJson;
-      Panel confirmationPanel = new Panel(lang("Confirmation", "Confirmation"));
+      Panel confirmationPanel = new Panel("Confirmation");
       ButtonComponent moduleLabel = new ButtonComponent(
          confirmationPanel,
-         lang("Module", "Module") + ": " + targetModule.getName()
+         () -> lang("Module", "Module") + ": " + targetModule.getName()
       );
       ActionButtonComponent importButton = new ActionButtonComponent(
-         confirmationPanel, lang("Import", "Import"), this::importModule
+         confirmationPanel, () -> lang("Import", "Import"), this::importModule
       );
       ActionButtonComponent cancelButton = new ActionButtonComponent(
-         confirmationPanel, lang("Cancel", "Cancel"), this::closeWithTransition
+         confirmationPanel, () -> lang("Cancel", "Cancel"), this::closeWithTransition
       );
       GuiElement[] children = {moduleLabel, importButton, cancelButton};
       confirmationPanel.addChildren(children);

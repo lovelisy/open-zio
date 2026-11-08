@@ -118,12 +118,12 @@ public class PresetPanel extends Panel {
                )
             );
             this.addChild(
-               new ActionButtonComponent(this, lang("Refresh", "Refresh"), this::requestListRefresh)
+               new ActionButtonComponent(this, () -> lang("Refresh", "Refresh"), this::requestListRefresh)
             );
             this.addChild(
                new ActionButtonComponent(
                   this,
-                  lang("Undo", "Undo"),
+                  () -> lang("Undo", "Undo"),
                   () -> {
                      try {
                         ClientContext.configurationManager.getPresetUndoState().undo();
@@ -139,13 +139,13 @@ public class PresetPanel extends Panel {
             this.addChild(
                new ButtonComponent(
                   this,
-                  lang("Preset", "Preset") + " " + this.selectedPreset.getName()
+                  () -> lang("Preset", "Preset") + " " + this.selectedPreset.getName()
                )
             );
             this.addChild(
                new ActionButtonComponent(
                   this,
-                  lang("Load", "Load"),
+                  () -> lang("Load", "Load"),
                   () -> {
                      PresetUndoAction action = PresetUndoAction.beforeLoad(this.selectedPreset.getName());
                      if (this.getSelectedCategoryPresets().applyPreset(this.selectedPreset.getName())) {
@@ -157,7 +157,7 @@ public class PresetPanel extends Panel {
             this.addChild(
                new ActionButtonComponent(
                   this,
-                  lang("Save", "Save"),
+                  () -> lang("Save", "Save"),
                   () -> {
                      try {
                         PresetUndoAction action = PresetUndoAction.beforeSave(
@@ -177,7 +177,7 @@ public class PresetPanel extends Panel {
             this.addChild(
                new ActionButtonComponent(
                   this,
-                  lang("Delete", "Delete"),
+                  () -> lang("Delete", "Delete"),
                   () -> {
                      PresetUndoAction action = PresetUndoAction.beforeDelete(
                         this.getSelectedCategoryPresets(), this.selectedPreset.getName()
@@ -190,12 +190,12 @@ public class PresetPanel extends Panel {
                )
             );
             this.addChild(
-               new ActionButtonComponent(this, lang("Open", "Open"), this::openPresetLocation)
+               new ActionButtonComponent(this, () -> lang("Open", "Open"), this::openPresetLocation)
             );
             this.addChild(
                new ActionButtonComponent(
                   this,
-                  lang("Back", "Back"),
+                  () -> lang("Back", "Back"),
                   () -> this.setMode(PresetPanelMode.NEW)
                )
             );

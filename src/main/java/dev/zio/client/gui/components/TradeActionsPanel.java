@@ -41,7 +41,7 @@ public class TradeActionsPanel extends Panel implements ClientAccess {
          )
       );
       this.registerChild(
-         new ActionButtonComponent(this, lang("Edit", "Edit"), this::openEditor)
+         new ActionButtonComponent(this, () -> lang("Edit", "Edit"), this::openEditor)
       );
       this.registerChild(
          new ActionButtonComponent(
@@ -51,7 +51,7 @@ public class TradeActionsPanel extends Panel implements ClientAccess {
          )
       );
       this.registerChild(
-         new ActionButtonComponent(this, lang("Cancel", "Cancel"), this::showCreatePanel)
+         new ActionButtonComponent(this, () -> lang("Cancel", "Cancel"), this::showCreatePanel)
       );
    }
 

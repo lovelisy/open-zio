@@ -13,7 +13,6 @@ import dev.zio.client.ClientAccess;
 import dev.zio.client.ClientContext;
 import dev.zio.client.NamedFeature;
 import dev.zio.client.gui.GuiElement;
-import dev.zio.client.render.FontRenderer;
 import dev.zio.client.gui.components.ModuleComponent;
 import dev.zio.client.render.TextUtils;
 import dev.zio.client.modules.Module;
@@ -38,7 +37,7 @@ public class ModuleCategoryPanel extends Panel implements ClientAccess {
    }
 
    public ModuleCategoryPanel(ModuleCategory category) {
-      super(FontRenderer.capitalize(ClientContext.languageTable.translateCategory(category.getName())));
+      super(category.getName());
       this.category = category;
       this.populateModules();
    }
