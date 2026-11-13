@@ -72,8 +72,9 @@ public final class ClientRenderTypes {
    );
    private static final BiFunction<Identifier, Boolean, RenderType> FONT = Util.memoize(
       (texture, linearFiltering) -> {
-         RenderSetup renderSetup = RenderSetup.builder(RenderPipelines.GUI_TEXTURED)
-            .withTexture("Sampler0", texture, textureSampler(linearFiltering))
+         FilterMode filter = linearFiltering ? FilterMode.LINEAR : FilterMode.NEAREST;
+         RenderSetup renderSetup = RenderSetup.builder(ClientRenderPipelines.FONT)
+            .withTexture("Sampler0", texture, () -> RenderSystem.getSamplerCache().getClampToEdge(filter, true))
             .createRenderSetup();
          return RenderType.create("zio_font", renderSetup);
       }

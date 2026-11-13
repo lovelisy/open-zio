@@ -93,6 +93,10 @@ public final class ClientRenderPipelines {
       .withCull(false)
       .withBlend(BlendFunction.TRANSLUCENT)
       .build();
+   public static final RenderPipeline FONT = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
+      .withLocation("pipeline/zio_font")
+      .withCull(false)
+      .build();
    public static final RenderPipeline GUI_LINES = RenderPipeline.builder(
          GUI_LINES_SNIPPET
       )
