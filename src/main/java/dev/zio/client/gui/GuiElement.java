@@ -15,13 +15,15 @@ import dev.zio.client.modules.client.UIModule;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 public interface GuiElement {
+   int BASE_LINE_HEIGHT = 10;
+
    default UIModule getUiModule() {
       return UIModule.INSTANCE;
    }
 
    default int getBaseHeight() {
       return UIModule.INSTANCE.styleSetting.getValue().getHeightPadding()
-         + FontRenderer.INSTANCE.getHeight();
+         + BASE_LINE_HEIGHT;
    }
 
    default int getYOffset() {
