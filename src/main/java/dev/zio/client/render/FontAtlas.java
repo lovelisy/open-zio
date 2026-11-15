@@ -24,7 +24,6 @@ import net.minecraft.resources.Identifier;
 
 public final class FontAtlas {
    public static final Identifier ATLAS_TEXTURE = Identifier.fromNamespaceAndPath("zio", "textures/font.png");
-   public static final String ATLAS_LABEL = ATLAS_TEXTURE.toLanguageKey();
    public static final int LAYOUT_VALUE = 4;
    public static final int SECONDARY_LAYOUT_VALUE = 1;
    public static final float LAYOUT_SCALE = 0.25F;

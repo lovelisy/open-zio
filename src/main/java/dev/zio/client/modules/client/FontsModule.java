@@ -54,7 +54,6 @@ public class FontsModule extends Module {
       reloadCooldownTicks = 3;
       if (!this.isToggled()) {
          FontRenderer.INSTANCE.flush();
-         AtlasTextRenderer.finishBuffers();
          this.queuedDraws.clear();
       }
    }
