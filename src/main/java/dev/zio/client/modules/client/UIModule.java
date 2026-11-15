@@ -13,6 +13,7 @@ import dev.zio.client.utils.collections.NamedIdentifier;
 
 import dev.zio.client.ClientAccess;
 import dev.zio.client.ClientContext;
+import dev.zio.client.events.ClientInitializationEvent;
 import dev.zio.client.events.PacketEvent;
 import dev.zio.client.events.MinecraftTickEvent;
 import dev.zio.client.events.EventHandler;
@@ -43,6 +44,7 @@ import java.awt.Color;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -127,6 +129,24 @@ public final class UIModule extends Module {
    }
 
    @EventHandler
+   private static void onClientInitialized(ClientInitializationEvent event) {
+      UIModule uiModule = INSTANCE;
+      if (uiModule == null) {
+         return;
+      }
+      Minecraft minecraft = ClientAccess.zioMinecraft;
+      if (minecraft == null || minecraft.getLanguageManager() == null) {
+         return;
+      }
+      String languageCode = minecraft.getLanguageManager().getSelected();
+      boolean chinese = languageCode != null
+         && languageCode.toLowerCase(Locale.ROOT).startsWith("zh");
+      LanguageChoice detectedLanguage = chinese ? LanguageChoice.CHINESE : LanguageChoice.ENGLISH;
+      uiModule.languageSetting.setDefaultValue(detectedLanguage);
+      uiModule.languageSetting.setValue(detectedLanguage);
+   }
+
+   @EventHandler
    private void onMinecraftTick(MinecraftTickEvent event) {
       Minecraft minecraft = ClientAccess.zioMinecraft;
       Window window = minecraft.getWindow();
@@ -183,8 +203,7 @@ public final class UIModule extends Module {
       BooleanSetting descriptionsOption = new BooleanSetting("Descriptions", true);
       descriptionsOption.markVisibilityDependency();
       this.descriptionsSetting = this.add(descriptionsOption);
-      this.languageSetting = this.add(new EnumSetting<>("Language", UIModule.LanguageChoice.CHINESE)
-         .dependsOn(this.descriptionsSetting));
+      this.languageSetting = this.add(new EnumSetting<>("Language", UIModule.LanguageChoice.CHINESE));
       this.settingsSetting = this.add(new BooleanSetting("Settings", true)
          .dependsOn(this.descriptionsSetting));
       BooleanSetting elementsOption = new BooleanSetting("Elements", true);
@@ -310,12 +329,10 @@ public final class UIModule extends Module {
          UIModule.LanguageChoice selectedLanguage = language.getValue();
          InputStream languageStream = selectedLanguage.openStream();
          tableCapture.load(languageStream);
+         tableCapture.setChineseEnabled(selectedLanguage == LanguageChoice.CHINESE);
          FontsModule fontsModule = FontsModule.INSTANCE;
-         if (fontsModule != null) {
-            fontsModule.chineseSetting.setValue(selectedLanguage == LanguageChoice.CHINESE);
-            if (selectedLanguage == LanguageChoice.CHINESE && fontsModule.isToggled()) {
-               fontsModule.validateFont(false);
-            }
+         if (fontsModule != null && selectedLanguage == LanguageChoice.CHINESE && fontsModule.isToggled()) {
+            fontsModule.validateFont(false);
          }
       };
       languageCallbackSetting.setChangeCallback(languageChangeCallback);

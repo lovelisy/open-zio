@@ -10,7 +10,6 @@
 package dev.zio.client.modules.client;
 
 import dev.zio.client.ClientAccess;
-import dev.zio.client.ClientContext;
 import dev.zio.client.events.MinecraftTickEvent;
 import dev.zio.client.events.HudRenderEvent;
 import dev.zio.client.events.ClientInitializationEvent;
@@ -54,7 +53,6 @@ public class FontsModule extends Module {
    public final Setting<String> fontSetting;
    public final Setting<Integer> sizeSetting;
    public final Setting<Boolean> antiAliasSetting;
-   public final Setting<Boolean> chineseSetting;
    public final Setting<Boolean> chatSetting;
    private final Setting<Boolean> offsetsSetting;
    public final Setting<Integer> shiftSetting;
@@ -116,23 +114,8 @@ public class FontsModule extends Module {
    @EventHandler
    private static void onClientInitialized(ClientInitializationEvent event) {
       INSTANCE.setToggled(true);
-      INSTANCE.applyChineseDisplay();
       INSTANCE.validateFont(true);
       reloadRequested.set(true);
-   }
-
-   private void applyChineseDisplay() {
-      boolean enabled = this.chineseSetting.getValue();
-      if (ClientContext.languageTable != null) {
-         ClientContext.languageTable.setChineseEnabled(enabled);
-      }
-      UIModule uiModule = UIModule.INSTANCE;
-      if (uiModule != null) {
-         UIModule.LanguageChoice target = enabled ? UIModule.LanguageChoice.CHINESE : UIModule.LanguageChoice.ENGLISH;
-         if (uiModule.languageSetting.getValue() != target) {
-            uiModule.languageSetting.setValue(target);
-         }
-      }
    }
 
    public void enqueueRectangle(
@@ -178,7 +161,6 @@ public class FontsModule extends Module {
       this.fontSetting = this.add(new FontSetting("Font", SystemFonts.BUILTIN_ID));
       this.sizeSetting = this.add(new NumberSetting<>("Size", 16, 12, 20));
       this.antiAliasSetting = this.add(new BooleanSetting("AntiAlias", true));
-      this.chineseSetting = this.add(new BooleanSetting("Chinese", true));
       this.chatSetting = this.add(new BooleanSetting("Chat", false));
       BooleanSetting offsets = new BooleanSetting("Offsets", false);
       offsets.markAsGroup();
@@ -190,12 +172,6 @@ public class FontsModule extends Module {
       this.shadowSetting = this.add(shadow.dependsOn(this.offsetsSetting));
       this.transformedPosition = new Vector2f();
       this.queuedDraws = new ArrayList<>();
-      this.chineseSetting.setChangeCallback(new Runnable() {
-         @Override
-         public void run() {
-            FontsModule.this.applyChineseDisplay();
-         }
-      });
       this.sizeSetting.setChangeCallback(new Runnable() {
          @Override
          public void run() {
