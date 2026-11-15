@@ -219,7 +219,7 @@ public final class GuiDrawUtils implements ClientAccess {
             color,
             shadow,
             poseStack.last().pose(),
-            AtlasTextRenderer.getBufferSource(),
+            FontRenderer.getVanillaTextBufferSource(),
             DisplayMode.NORMAL,
             0,
             15728880

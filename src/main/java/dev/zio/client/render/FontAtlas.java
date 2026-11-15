@@ -17,7 +17,8 @@ import dev.zio.client.ClientAccess;
 import dev.zio.client.modules.client.FontsModule;
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
 import java.awt.Font;
-import java.util.function.Supplier;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.resources.Identifier;
 
@@ -28,55 +29,38 @@ public final class FontAtlas {
    public static final int SECONDARY_LAYOUT_VALUE = 1;
    public static final float LAYOUT_SCALE = 0.25F;
    public static final int PIXEL_HEIGHT = 32;
-   private static final Supplier<String> ATLAS_LABEL_SUPPLIER = new Supplier<String>() {
-      @Override
-      public String get() {
-         return ATLAS_LABEL;
-      }
-   };
-   private static final Glyph MISSING = new Glyph(0.0F, 0.0F, 0.0F, 0.0F, 0.0F);
+   private static final int MAX_PAGES = 64;
+   private static final int PAGE_BUFFER_SIZE = 1048576;
+   private static final Glyph MISSING = new Glyph(0, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F);
    private final Char2ObjectOpenHashMap<Glyph> glyphs = new Char2ObjectOpenHashMap<>();
    private final Char2ObjectOpenHashMap<Glyph> missing = new Char2ObjectOpenHashMap<>();
-   private final MeshBuffer mesh = MeshBuffer.create(4194304);
+   private final List<Page> pages = new ArrayList<>();
    private final Font font;
-   private AwtFontAtlas atlas;
-   private MipmapFontTexture texture;
-   private NativeImage pixels;
-   private int fontHeight;
 
    public FontAtlas(Font font) {
       this.font = font;
-      this.fontHeight = Math.max(1, Math.round(font.getSize2D()));
    }
 
-   private AwtFontAtlas atlas() {
-      if (this.atlas == null) {
-         this.atlas = new AwtFontAtlas(this.font);
-         this.fontHeight = Math.max(1, this.atlas.getRowHeight());
-      }
-      return this.atlas;
+   private Page createPage() {
+      Page page = new Page(this.pages.size());
+      this.pages.add(page);
+      return page;
    }
 
-   private void ensureTexture() {
-      if (this.texture != null) {
-         return;
+   private Page currentPage() {
+      if (this.pages.isEmpty()) {
+         return this.createPage();
       }
-      this.pixels = new NativeImage(NativeImage.Format.RGBA, AwtFontAtlas.WIDTH, AwtFontAtlas.HEIGHT, false);
-      this.texture = new MipmapFontTexture(ATLAS_LABEL_SUPPLIER, AwtFontAtlas.WIDTH, AwtFontAtlas.HEIGHT);
-      ClientAccess.zioMinecraft.getTextureManager().register(ATLAS_TEXTURE, this.texture);
+      return this.pages.get(this.pages.size() - 1);
    }
 
-   private void uploadPending() {
-      MipmapFontTexture target = this.texture;
-      if (target == null || this.pixels == null) {
+   private void ensureTexture(Page page) {
+      if (page.texture != null) {
          return;
       }
-      AwtFontAtlas source = this.atlas();
-      if (!source.hasPending()) {
-         return;
-      }
-      source.flushInto(this.pixels);
-      target.upload(this.pixels);
+      page.pixels = new NativeImage(NativeImage.Format.RGBA, AwtFontAtlas.WIDTH, AwtFontAtlas.HEIGHT, false);
+      page.texture = new MipmapFontTexture(() -> page.label, AwtFontAtlas.WIDTH, AwtFontAtlas.HEIGHT);
+      ClientAccess.zioMinecraft.getTextureManager().register(page.textureId, page.texture);
    }
 
    private synchronized Glyph resolve(char character) {
@@ -87,13 +71,29 @@ public final class FontAtlas {
       if (this.missing.containsKey(character)) {
          return null;
       }
-      Glyph created = this.atlas().createGlyph(character);
+      Page page = this.currentPage();
+      Glyph created = page.atlas.createGlyph(character);
+      if (created == null
+         && page.atlas.isFull()
+         && page.atlas.canDisplay(character)
+         && this.pages.size() < MAX_PAGES) {
+         page = this.createPage();
+         created = page.atlas.createGlyph(character);
+      }
       if (created == null) {
          this.missing.put(character, MISSING);
          return null;
       }
-      this.glyphs.put(character, created);
-      return created;
+      Glyph wrapped = new Glyph(
+         page.index,
+         created.x(),
+         created.y(),
+         created.width(),
+         created.height(),
+         created.advance()
+      );
+      this.glyphs.put(character, wrapped);
+      return wrapped;
    }
 
    private Glyph fallback(char character) {
@@ -105,40 +105,44 @@ public final class FontAtlas {
    }
 
    public synchronized void flush() {
-      boolean needsUpload = this.atlas != null && this.atlas.hasPending();
-      if (!needsUpload && !this.mesh.isBuilding()) {
+      if (this.pages.isEmpty()) {
          return;
       }
-      this.ensureTexture();
-      this.uploadPending();
-      if (this.mesh.isBuilding()) {
-         boolean antiAlias = FontsModule.INSTANCE == null || FontsModule.INSTANCE.antiAliasSetting.getValue();
-         this.mesh.draw(ClientRenderTypes.font(ATLAS_TEXTURE, antiAlias));
+      boolean antiAlias = FontsModule.INSTANCE == null || FontsModule.INSTANCE.antiAliasSetting.getValue();
+      for (Page page : this.pages) {
+         if (page.atlas.hasPending()) {
+            this.ensureTexture(page);
+            page.atlas.flushInto(page.pixels);
+            page.texture.upload(page.pixels);
+         }
+         if (page.mesh.isBuilding()) {
+            page.mesh.draw(ClientRenderTypes.font(page.textureId, antiAlias));
+         }
       }
    }
 
-   public void release() {
-      if (this.mesh.isBuilding()) {
-         this.mesh.draw();
-      }
-      if (this.atlas != null) {
-         this.atlas.dispose();
-         this.atlas = null;
-      }
-      if (this.pixels != null) {
-         this.pixels.close();
-         this.pixels = null;
-      }
-      MipmapFontTexture owned = this.texture;
-      this.texture = null;
-      if (owned != null) {
-         AbstractTexture current = ClientAccess.zioMinecraft.getTextureManager().getTexture(ATLAS_TEXTURE);
-         if (current == owned) {
-            ClientAccess.zioMinecraft.getTextureManager().release(ATLAS_TEXTURE);
-         } else {
-            owned.close();
+   public synchronized void release() {
+      for (Page page : this.pages) {
+         if (page.mesh.isBuilding()) {
+            page.mesh.draw();
+         }
+         page.atlas.dispose();
+         if (page.pixels != null) {
+            page.pixels.close();
+            page.pixels = null;
+         }
+         MipmapFontTexture owned = page.texture;
+         page.texture = null;
+         if (owned != null) {
+            AbstractTexture current = ClientAccess.zioMinecraft.getTextureManager().getTexture(page.textureId);
+            if (current == owned) {
+               ClientAccess.zioMinecraft.getTextureManager().release(page.textureId);
+            } else {
+               owned.close();
+            }
          }
       }
+      this.pages.clear();
       this.glyphs.clear();
       this.missing.clear();
    }
@@ -152,8 +156,9 @@ public final class FontAtlas {
          Glyph fallback = this.fallback(character);
          return fallback == null ? 0.0F : fallback.advance();
       }
-      if (!this.mesh.isBuilding()) {
-         this.mesh.begin(Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+      Page page = this.pages.get(glyph.page());
+      if (!page.mesh.isBuilding()) {
+         page.mesh.begin(Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
       }
       float z = (float)FontRenderer.getZOffset();
       float top = y;
@@ -164,10 +169,10 @@ public final class FontAtlas {
       float u1 = (glyph.x() + glyph.width()) / (float)AwtFontAtlas.WIDTH;
       float v0 = glyph.y() / (float)AwtFontAtlas.HEIGHT;
       float v1 = (glyph.y() + glyph.height()) / (float)AwtFontAtlas.HEIGHT;
-      this.mesh.addVertex(poses.last(), left, bottom, z).setColor(argb).setUv(u0, v1);
-      this.mesh.addVertex(poses.last(), right, bottom, z).setColor(argb).setUv(u1, v1);
-      this.mesh.addVertex(poses.last(), right, top, z).setColor(argb).setUv(u1, v0);
-      this.mesh.addVertex(poses.last(), left, top, z).setColor(argb).setUv(u0, v0);
+      page.mesh.addVertex(poses.last(), left, bottom, z).setColor(argb).setUv(u0, v1);
+      page.mesh.addVertex(poses.last(), right, bottom, z).setColor(argb).setUv(u1, v1);
+      page.mesh.addVertex(poses.last(), right, top, z).setColor(argb).setUv(u1, v0);
+      page.mesh.addVertex(poses.last(), left, top, z).setColor(argb).setUv(u0, v0);
       return glyph.advance();
    }
 
@@ -184,10 +189,29 @@ public final class FontAtlas {
    }
 
    public int getHeight() {
-      this.atlas();
-      return this.fontHeight;
+      return Math.max(1, this.currentPage().atlas.getRowHeight());
    }
 
-   record Glyph(float x, float y, float width, float height, float advance) {
+   private final class Page {
+      private final int index;
+      private final Identifier textureId;
+      private final String label;
+      private final AwtFontAtlas atlas;
+      private final MeshBuffer mesh;
+      private MipmapFontTexture texture;
+      private NativeImage pixels;
+
+      private Page(int index) {
+         this.index = index;
+         this.textureId = index == 0
+            ? ATLAS_TEXTURE
+            : Identifier.fromNamespaceAndPath("zio", "textures/font_" + index + ".png");
+         this.label = this.textureId.toLanguageKey();
+         this.atlas = new AwtFontAtlas(FontAtlas.this.font);
+         this.mesh = MeshBuffer.create(PAGE_BUFFER_SIZE);
+      }
+   }
+
+   record Glyph(int page, float x, float y, float width, float height, float advance) {
    }
 }

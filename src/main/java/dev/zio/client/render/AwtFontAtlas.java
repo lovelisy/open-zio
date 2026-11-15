@@ -71,6 +71,14 @@ final class AwtFontAtlas {
       return this.pendingCount > 0;
    }
 
+   synchronized boolean isFull() {
+      return this.cursorY + this.rowHeight > HEIGHT;
+   }
+
+   synchronized boolean canDisplay(char character) {
+      return this.font.canDisplay(character) || this.cjkFont.canDisplay(character);
+   }
+
    void flushInto(NativeImage image) {
       synchronized (this) {
          this.pendingCount = 0;
@@ -107,7 +115,7 @@ final class AwtFontAtlas {
       this.graphics.drawString(String.valueOf(character), x, y + this.baseline);
       this.cursorX += width + PADDING;
       this.pendingCount++;
-      return new FontAtlas.Glyph((float)x, (float)y, (float)width, (float)this.rowHeight, (float)advance);
+      return new FontAtlas.Glyph(0, (float)x, (float)y, (float)width, (float)this.rowHeight, (float)advance);
    }
 
    private int advance(Font selected, char character) {

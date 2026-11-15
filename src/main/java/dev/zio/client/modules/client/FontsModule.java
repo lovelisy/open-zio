@@ -71,9 +71,13 @@ public class FontsModule extends Module {
 
    @Override
    public void onToggle() {
-
       reloadCooldownTicks = 3;
       this.validateFont(false);
+      if (!this.isToggled()) {
+         FontRenderer.INSTANCE.flush();
+         AtlasTextRenderer.finishBuffers();
+         this.queuedDraws.clear();
+      }
    }
 
    private void flushQueuedDraws(PoseStack poseStack) {
@@ -225,6 +229,9 @@ public class FontsModule extends Module {
 
       @Override
       public void render(PoseStack poseStack) {
+         if (!FontsModule.INSTANCE.isToggled()) {
+            return;
+         }
          float chatScale = ((Double)ClientAccess.zioMinecraft.options.chatScale().get()).floatValue();
          poseStack.pushPose();
 

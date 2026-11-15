@@ -14,11 +14,13 @@ import dev.zio.client.ClientContext;
 import dev.zio.client.modules.client.FontsModule;
 import dev.zio.client.modules.player.NameProtectModule;
 
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.Color;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import net.minecraft.client.gui.Font.DisplayMode;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.ARGB;
@@ -26,6 +28,8 @@ import net.minecraft.util.ARGB;
 public final class FontRenderer implements ClientAccess {
    private static final NameProtectModule nameProtect = (NameProtectModule)ClientContext.getModule(NameProtectModule.class);
    private static final Queue<AtlasTextRenderer> pendingRelease = new ConcurrentLinkedQueue<>();
+   private static final ByteBufferBuilder VANILLA_TEXT_BUFFER = new ByteBufferBuilder(2048);
+   private static final MultiBufferSource.BufferSource VANILLA_TEXT_BUFFERS = MultiBufferSource.immediate(VANILLA_TEXT_BUFFER);
    public static final FontRenderer INSTANCE = new FontRenderer();
    private AtlasTextRenderer renderer;
 
@@ -63,11 +67,18 @@ public final class FontRenderer implements ClientAccess {
       while ((stale = pendingRelease.poll()) != null) {
          stale.release();
       }
-      if (this.renderer != null) {
+      if (FontsModule.INSTANCE.isToggled() && this.renderer != null) {
          this.renderer.flush();
-      } else {
-         AtlasTextRenderer.finishBuffers();
       }
+      finishVanillaText();
+   }
+
+   public static MultiBufferSource getVanillaTextBufferSource() {
+      return VANILLA_TEXT_BUFFERS;
+   }
+
+   public static void finishVanillaText() {
+      VANILLA_TEXT_BUFFERS.endBatch();
    }
 
    public boolean isFontLoading() {
@@ -185,7 +196,7 @@ public final class FontRenderer implements ClientAccess {
                argb,
                true,
                poses.last().pose(),
-               AtlasTextRenderer.getBufferSource(),
+               getVanillaTextBufferSource(),
                displayMode,
                0,
                15728880
@@ -225,7 +236,7 @@ public final class FontRenderer implements ClientAccess {
                argb,
                false,
                poses.last().pose(),
-               AtlasTextRenderer.getBufferSource(),
+               getVanillaTextBufferSource(),
                displayMode,
                0,
                15728880
