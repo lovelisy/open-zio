@@ -109,8 +109,8 @@ public final class AtlasTextRenderer {
       return Math.max(shadowEnd, this.drawPass(poses, text, x, y, argb, false));
    }
 
-   public static AtlasTextRenderer create(int atlasPixelHeight, float renderScale, FontEntry fontEntry) {
-      Font awtFont = SystemFonts.awtFont(fontEntry, Font.PLAIN, atlasPixelHeight);
+   public static AtlasTextRenderer create(int atlasPixelHeight, float renderScale) {
+      Font awtFont = BundledFont.awtFont(Font.PLAIN, atlasPixelHeight);
       FontAtlas atlas = new FontAtlas(awtFont);
       AtlasTextRenderer renderer = new AtlasTextRenderer(atlas);
       renderer.setScale(renderScale);

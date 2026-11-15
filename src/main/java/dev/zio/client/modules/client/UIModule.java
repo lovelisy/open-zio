@@ -330,10 +330,6 @@ public final class UIModule extends Module {
          InputStream languageStream = selectedLanguage.openStream();
          tableCapture.load(languageStream);
          tableCapture.setChineseEnabled(selectedLanguage == LanguageChoice.CHINESE);
-         FontsModule fontsModule = FontsModule.INSTANCE;
-         if (fontsModule != null && selectedLanguage == LanguageChoice.CHINESE && fontsModule.isToggled()) {
-            fontsModule.validateFont(false);
-         }
       };
       languageCallbackSetting.setChangeCallback(languageChangeCallback);
       this.hoverSoundSetting.setConfigName("HoverSound");

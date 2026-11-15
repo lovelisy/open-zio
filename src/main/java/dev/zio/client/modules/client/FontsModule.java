@@ -14,43 +14,26 @@ import dev.zio.client.events.MinecraftTickEvent;
 import dev.zio.client.events.HudRenderEvent;
 import dev.zio.client.events.ClientInitializationEvent;
 import dev.zio.client.events.EventHandler;
-import dev.zio.client.gui.screens.ClientScreen;
 import dev.zio.client.render.GuiDrawUtils;
 import dev.zio.client.render.GuiProjectionUtils;
 import dev.zio.client.render.FontRenderer;
 import dev.zio.client.render.AtlasTextRenderer;
-import dev.zio.client.render.SystemFonts;
 import dev.zio.client.modules.Module;
 import dev.zio.client.modules.ModuleCategory;
 import dev.zio.client.settings.BooleanSetting;
-import dev.zio.client.settings.FontSetting;
 import dev.zio.client.settings.NumberSetting;
 import dev.zio.client.settings.Setting;
 
-import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import net.minecraft.client.Minecraft;
 import net.minecraft.util.FormattedCharSequence;
 import org.joml.Matrix3x2fc;
 import org.joml.Vector2f;
-import org.lwjgl.glfw.GLFW;
 
 public class FontsModule extends Module {
    public static FontsModule INSTANCE;
 
-   private static final Runnable RELOAD_RENDERER = new Runnable() {
-      @Override
-      public void run() {
-         if (ClientAccess.zioMinecraft.player != null
-            || ClientAccess.zioMinecraft.screen instanceof ClientScreen) {
-            FontRenderer.INSTANCE.setRenderer(FontRenderer.INSTANCE.createRenderer());
-         }
-      }
-   };
-   public final Setting<String> fontSetting;
    public final Setting<Integer> sizeSetting;
    public final Setting<Boolean> antiAliasSetting;
    public final Setting<Boolean> chatSetting;
@@ -58,7 +41,6 @@ public class FontsModule extends Module {
    public final Setting<Integer> shiftSetting;
    public final Setting<Integer> translateSetting;
    public final Setting<Float> shadowSetting;
-   private static final AtomicBoolean reloadRequested = new AtomicBoolean(false);
    private static int reloadCooldownTicks;
    private final Vector2f transformedPosition;
    private final List<QueuedDraw> queuedDraws;
@@ -70,7 +52,6 @@ public class FontsModule extends Module {
    @Override
    public void onToggle() {
       reloadCooldownTicks = 3;
-      this.validateFont(false);
       if (!this.isToggled()) {
          FontRenderer.INSTANCE.flush();
          AtlasTextRenderer.finishBuffers();
@@ -114,8 +95,7 @@ public class FontsModule extends Module {
    @EventHandler
    private static void onClientInitialized(ClientInitializationEvent event) {
       INSTANCE.setToggled(true);
-      INSTANCE.validateFont(true);
-      reloadRequested.set(true);
+      reloadCooldownTicks = 3;
    }
 
    public void enqueueRectangle(
@@ -131,21 +111,6 @@ public class FontsModule extends Module {
 
    @EventHandler
    private static void onMinecraftTick(MinecraftTickEvent event) {
-      Minecraft minecraft = ClientAccess.zioMinecraft;
-      Window window = minecraft.getWindow();
-      long windowHandle = (long)(window.handle());
-      if (GLFW.glfwGetMouseButton(windowHandle, 0) != 1) {
-         AtomicBoolean requestedReloadFlag = reloadRequested;
-         if (requestedReloadFlag.get()) {
-            FontRenderer.INSTANCE.setRenderer(FontRenderer.INSTANCE.createRenderer());
-            boolean clearRequest = false;
-            AtomicBoolean reloadFlag = reloadRequested;
-            reloadFlag.set(clearRequest);
-
-            reloadCooldownTicks = 3;
-         }
-      }
-
       if (reloadCooldownTicks > 0) {
          reloadCooldownTicks--;
       }
@@ -158,7 +123,6 @@ public class FontsModule extends Module {
 
    public FontsModule() {
       super("Fonts", "Manages the client's font renderer.", ModuleCategory.CLIENT, new String[0]);
-      this.fontSetting = this.add(new FontSetting("Font", SystemFonts.BUILTIN_ID));
       this.sizeSetting = this.add(new NumberSetting<>("Size", 16, 12, 20));
       this.antiAliasSetting = this.add(new BooleanSetting("AntiAlias", true));
       this.chatSetting = this.add(new BooleanSetting("Chat", false));
@@ -178,21 +142,9 @@ public class FontsModule extends Module {
             FontRenderer.INSTANCE.updateScale();
          }
       });
-      this.fontSetting.setChangeCallback(new Runnable() {
-         @Override
-         public void run() {
-            reloadRequested.set(true);
-         }
-      });
       INSTANCE = this;
       ClientAccess.eventBus.subscribeStatic(FontsModule.class);
       this.setDrawn(false);
-   }
-
-   public void validateFont(boolean reload) {
-      if (reload) {
-         RELOAD_RENDERER.run();
-      }
    }
 
    private record QueuedText(

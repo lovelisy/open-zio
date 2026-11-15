@@ -31,10 +31,8 @@ final class AwtFontAtlas {
    private static final int ADVANCE_INSET = 8;
 
    private final Font font;
-   private final Font cjkFont;
    private final FontRenderContext context = new FontRenderContext(new AffineTransform(), true, true);
    private final FontMetrics metrics;
-   private final FontMetrics cjkMetrics;
    private final int rowHeight;
    private final int baseline;
    private final int cjkWidth;
@@ -48,11 +46,9 @@ final class AwtFontAtlas {
 
    AwtFontAtlas(Font font) {
       this.font = font;
-      this.cjkFont = font.canDisplay('\u4e2d') ? font : new Font(Font.SANS_SERIF, font.getStyle(), font.getSize());
       this.metrics = metrics(font);
-      this.cjkMetrics = this.cjkFont == font ? this.metrics : metrics(this.cjkFont);
-      this.rowHeight = align(Math.max(this.metrics.getHeight(), this.cjkMetrics.getHeight()), 2);
-      this.baseline = Math.max(this.metrics.getAscent(), this.cjkMetrics.getAscent());
+      this.rowHeight = align(this.metrics.getHeight(), 2);
+      this.baseline = this.metrics.getAscent();
       this.cjkWidth = align(font.getSize() + ADVANCE_INSET, 2);
       this.canvas = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB);
       this.graphics = this.canvas.createGraphics();
@@ -76,7 +72,7 @@ final class AwtFontAtlas {
    }
 
    synchronized boolean canDisplay(char character) {
-      return this.font.canDisplay(character) || this.cjkFont.canDisplay(character);
+      return this.font.canDisplay(character);
    }
 
    void flushInto(NativeImage image) {
@@ -93,11 +89,10 @@ final class AwtFontAtlas {
    }
 
    synchronized FontAtlas.Glyph createGlyph(char character) {
-      Font selected = this.font.canDisplay(character) ? this.font : this.cjkFont;
-      if (!selected.canDisplay(character)) {
+      if (!this.font.canDisplay(character)) {
          return null;
       }
-      int advance = this.advance(selected, character);
+      int advance = this.advance(character);
       if (advance <= 0) {
          return null;
       }
@@ -111,24 +106,23 @@ final class AwtFontAtlas {
       }
       int x = this.cursorX;
       int y = this.cursorY;
-      this.graphics.setFont(selected);
+      this.graphics.setFont(this.font);
       this.graphics.drawString(String.valueOf(character), x, y + this.baseline);
       this.cursorX += width + PADDING;
       this.pendingCount++;
       return new FontAtlas.Glyph(0, (float)x, (float)y, (float)width, (float)this.rowHeight, (float)advance);
    }
 
-   private int advance(Font selected, char character) {
+   private int advance(char character) {
       if (isCjk(character)) {
          return this.cjkWidth - ADVANCE_INSET;
       }
       try {
-         FontMetrics selectedMetrics = selected == this.cjkFont ? this.cjkMetrics : this.metrics;
-         int advance = selectedMetrics.charWidth(character);
+         int advance = this.metrics.charWidth(character);
          if (advance > 0) {
             return advance;
          }
-         Rectangle2D bounds = selected.getStringBounds(String.valueOf(character), this.context);
+         Rectangle2D bounds = this.font.getStringBounds(String.valueOf(character), this.context);
          if (bounds.getWidth() <= 0.0D) {
             return 0;
          }

@@ -286,7 +286,6 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
          case dev.zio.client.settings.NumberSetting<?> value -> new NumericSettingComponent<>(panel, this, value);
          case dev.zio.client.settings.ColorSetting value -> new ColorSettingComponent(panel, this, value);
          case dev.zio.client.settings.StringSetting value -> new StringSettingComponent(panel, this, value);
-         case dev.zio.client.settings.FontSetting value -> new FontSettingComponent(panel, this, value);
          case dev.zio.client.settings.EnumSetting<?> value -> new EnumSettingComponent<>(panel, this, value);
          case dev.zio.client.settings.IdentifierSetting value -> new SoundSettingComponent(panel, this, value);
          default -> null;
