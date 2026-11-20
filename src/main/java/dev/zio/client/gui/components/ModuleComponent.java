@@ -73,7 +73,22 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
    private int searchHighlightCycle = 0;
    private boolean copyShortcutHovered;
    private boolean requestedOpen;
-   public float animatedHeight;
+   private long pressStartedAt = -1L;
+   private boolean pressPushed;   public float animatedHeight;
+
+   private float getPressScale() {
+      if (!GlassStyle.isActive() || this.pressStartedAt <= 0L) {
+         return 1.0F;
+      }
+
+      float progress = (System.currentTimeMillis() - this.pressStartedAt) / 260.0F;
+      if (progress >= 1.0F) {
+         return 1.0F;
+      }
+
+      float squeeze = progress < 0.3F ? 1.0F : 1.0F - (progress - 0.3F) / 0.7F;
+      return 1.0F - 0.035F * squeeze;
+   }
 
    @Override
    public void setYOffset(int yOffset) {
@@ -320,6 +335,19 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
       this.expandAnimation.setTarget(this.requestedOpen);
       float expandValue = this.expandAnimation.updateAndGet();
       if (glass) {
+         float press = this.getPressScale();
+         if (press < 0.999F) {
+            float rowCenterX = this.panel.getX() + this.panel.getWidth() / 2.0F;
+            float rowCenterY = this.panel.getY() + this.yOffset + baseHeight / 2.0F;
+            poseStack.pushPose();
+            poseStack.translate(rowCenterX, rowCenterY, 0.0F);
+            poseStack.scale(press, press, 1.0F);
+            poseStack.translate(-rowCenterX, -rowCenterY, 0.0F);
+            this.pressPushed = true;
+         } else {
+            this.pressPushed = false;
+         }
+
          GlassStyle.moduleRow(
             poseStack,
             this.panel.getX(),
@@ -558,6 +586,10 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
       }
 
       poseStack.popPose();
+      if (this.pressPushed) {
+         poseStack.popPose();
+         this.pressPushed = false;
+      }
       if (this.getUiModule().descriptionsSetting.getValue()
          && this.isMouseOver(mouseX, mouseY)) {
          ClientContext.getClickGui()
@@ -575,6 +607,10 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
    @Override
    public void mouseClicked(double mouseX, double mouseY, int button) {
       super.mouseClicked(mouseX, mouseY, button);
+      if (this.isMouseOver(mouseX, mouseY) && GlassStyle.isActive()) {
+         this.pressStartedAt = System.currentTimeMillis();
+      }
+
       if (this.isMouseOver(mouseX, mouseY)
          && !ClientContext.getClickGui()
             .getSearchBox()

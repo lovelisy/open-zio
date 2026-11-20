@@ -9,6 +9,7 @@
 
 package dev.zio.client.gui.components;
 
+import dev.zio.client.audio.BuiltinSound;
 import dev.zio.client.render.FontRenderer;
 import dev.zio.client.render.GuiDrawUtils;
 import dev.zio.client.utils.ClampedInterpolatedFloat;
@@ -173,14 +174,16 @@ public class BooleanSettingComponent extends SettingComponent<Boolean> {
       super.mouseClicked(mouseX, mouseY, button);
       if (this.isMouseOver(mouseX, mouseY)) {
          if (button == 0) {
-            this.setting
-               .setValue(
-                  !this.setting.getValue()
-               );
+            boolean next = !this.setting.getValue();
+            this.setting.setValue(next);
+            if (!this.setting.groupOnly) {
+               GlassStyle.play(next ? BuiltinSound.TOGGLE_ON : BuiltinSound.TOGGLE_OFF, 0.9F);
+            }
          }
 
          if (button == 1 && this.setting.visibilityDependency) {
             this.setting.expanded = !this.setting.expanded;
+            GlassStyle.play(this.setting.expanded ? BuiltinSound.EXPAND : BuiltinSound.COLLAPSE, 0.9F);
          }
       }
    }

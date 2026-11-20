@@ -352,7 +352,7 @@ public class EnumSettingComponent<E extends Enum<E> & NamedEntry> extends Settin
                   this.selectedIndex + 1
                )
                % this.selectableValueCount;
-            GlassStyle.play(BuiltinSound.CLICK, 0.8F);
+            GlassStyle.play(BuiltinSound.SELECT, 0.8F);
          }
 
          if (button == 1) {

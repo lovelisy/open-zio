@@ -10,6 +10,7 @@
 package dev.zio.client.gui.components;
 
 import dev.zio.client.utils.InterpolatedFloat;
+import dev.zio.client.audio.BuiltinSound;
 import dev.zio.client.gui.CloseState;
 import dev.zio.client.gui.GlassStyle;
 import dev.zio.client.render.GuiDrawUtils;
@@ -40,6 +41,7 @@ public class NumericSettingComponent<N extends Number> extends SettingComponent<
    private boolean dragging;
    private boolean cursorVisible = false;
    private float sliderFillWidth;
+   private long lastSliderTickAt;
    private String inputText = "";
 
    private String getBlinkingCursor() {
@@ -75,6 +77,7 @@ public class NumericSettingComponent<N extends Number> extends SettingComponent<
             if (!this.inputText.isEmpty()) {
                this.inputText = this.inputText
                   .substring(0, this.inputText.length() - 1);
+               GlassStyle.play(BuiltinSound.DELETE, 0.5F);
             }
       }
    }
@@ -354,6 +357,7 @@ public class NumericSettingComponent<N extends Number> extends SettingComponent<
             / (maximumValue - minimumValue)
       );
       if (this.dragging) {
+         String beforeTick = String.valueOf(this.setting.getValue());
          if (mouseOffset == 0.0) {
             if (roundingStep == 1.0D) {
                this.numberSetting
@@ -384,6 +388,14 @@ public class NumericSettingComponent<N extends Number> extends SettingComponent<
                   .setNumber(
                      roundSliderValue(clampedValue)
                   );
+            }
+         }
+
+         if (!beforeTick.equals(String.valueOf(this.setting.getValue()))) {
+            long now = System.currentTimeMillis();
+            if (now - this.lastSliderTickAt >= 35L) {
+               this.lastSliderTickAt = now;
+               GlassStyle.play(BuiltinSound.SLIDER_TICK, 0.7F);
             }
          }
       }
@@ -439,6 +451,7 @@ public class NumericSettingComponent<N extends Number> extends SettingComponent<
 
       this.inputText = (String.valueOf(previousInputText) + "\u0001")
          .replaceFirst("\u0001", String.valueOf((char)characterCode));
+      GlassStyle.play(BuiltinSound.TYPE, 0.5F);
    }
 
 }

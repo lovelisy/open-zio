@@ -10,9 +10,11 @@
 package dev.zio.client.gui.components;
 
 import dev.zio.client.gui.CursorType;
+import dev.zio.client.audio.BuiltinSound;
 import dev.zio.client.render.FontRenderer;
 import dev.zio.client.gui.components.AbstractComponent;
 import dev.zio.client.ClientContext;
+import dev.zio.client.gui.GlassStyle;
 import dev.zio.client.gui.screens.ClientScreen;
 import dev.zio.client.modules.Keybind;
 import dev.zio.client.settings.Setting;
@@ -132,6 +134,7 @@ public class KeybindComponent extends AbstractComponent {
             .isOpen()) {
          if (button == 0) {
             this.listening = !this.listening;
+            GlassStyle.play(this.listening ? BuiltinSound.EXPAND : BuiltinSound.COLLAPSE, 0.7F);
             return;
          }
 
@@ -140,6 +143,7 @@ public class KeybindComponent extends AbstractComponent {
                binding -> binding.withCode(button).withMouse(true)
             );
             this.listening = !this.listening;
+            GlassStyle.play(BuiltinSound.SELECT, 0.7F);
             return;
          }
 
@@ -154,6 +158,7 @@ public class KeybindComponent extends AbstractComponent {
                      % Keybind.Mode.values().length]
                )
             );
+            GlassStyle.play(BuiltinSound.CLICK, 0.7F);
          }
       }
    }

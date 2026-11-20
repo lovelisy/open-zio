@@ -24,6 +24,7 @@ import dev.zio.client.render.ColorUtils;
 import dev.zio.client.gui.GuiElement;
 import dev.zio.client.gui.CursorType;
 import dev.zio.client.gui.GlassStyle;
+import dev.zio.client.audio.BuiltinSound;
 import dev.zio.client.render.FontRenderer;
 import dev.zio.client.gui.components.ModuleComponent;
 import dev.zio.client.managers.ConfigurationManager;
@@ -530,6 +531,7 @@ public class ClickGuiScreen extends ClientScreen implements ClientAccess {
          && mouseY >= this.glassSearchY
          && mouseY <= this.glassSearchY + this.glassSearchHeight) {
          this.setInitialFocus(this.searchBox);
+         GlassStyle.play(BuiltinSound.EXPAND, 0.6F);
          return;
       }
 

@@ -124,7 +124,7 @@ public class EnumOptionRow<E extends Enum<E> & NamedEntry> extends AbstractCompo
                   .setValue(candidate);
                this.enumComponent
                   .setSelectedIndex(this.selectableIndex);
-               GlassStyle.play(BuiltinSound.CLICK, 0.8F);
+               GlassStyle.play(BuiltinSound.SELECT, 0.8F);
             }
          }
       }

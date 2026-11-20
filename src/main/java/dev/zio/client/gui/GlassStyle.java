@@ -68,6 +68,22 @@ public final class GlassStyle {
       return ColorUtils.toArgb(color, alpha);
    }
 
+   public static void panel(
+      PoseStack poses, float x, float y, float w, float h, float headerHeight, float mouseX, float mouseY
+   ) {
+      panel(poses, x, y, w, h, headerHeight);
+      if (h <= 0.0F) {
+         return;
+      }
+
+      boolean inside = mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h;
+      if (!inside) {
+         return;
+      }
+
+      spotlight(poses, x, y, w, h, mouseX, mouseY, 0x1EFFFFFF);
+   }
+
    public static void panel(PoseStack poses, float x, float y, float w, float h, float headerHeight) {
       if (w <= 0.0F || h <= 0.0F) {
          return;
@@ -145,21 +161,25 @@ public final class GlassStyle {
    public static void scrollbar(
       PoseStack poses, float x, float y, float w, float height, float headerHeight, int scrollOffset, int contentHeight
    ) {
-      int maxScroll = Math.min(-contentHeight + (int)height, 0);
-      if (maxScroll >= 0) {
-         return;
-      }
-
       float trackTop = y + headerHeight + 4.0F;
       float trackHeight = height - headerHeight - 8.0F;
       if (trackHeight <= 4.0F) {
          return;
       }
 
+      float trackX = x + w - 3.0F;
+      int maxScroll = Math.min(-contentHeight + (int)height, 0);
+      if (maxScroll >= 0) {
+         GuiShapes.fill(poses, trackX, trackTop, 2.0F, trackHeight, 1.0F, 0x22FFFFFF);
+         return;
+      }
+
+      GuiShapes.fill(poses, trackX, trackTop, 2.0F, trackHeight, 1.0F, 0x1CFFFFFF);
+
       float progress = Math.max(0.0F, Math.min(1.0F, scrollOffset / (float)maxScroll));
       float thumbHeight = Math.max(12.0F, trackHeight * height / contentHeight);
       float thumbY = trackTop + (trackHeight - thumbHeight) * progress;
-      GuiShapes.fill(poses, x + w - 4.5F, thumbY, 2.0F, thumbHeight, 1.0F, 0x55FFFFFF);
+      GuiShapes.fill(poses, trackX, thumbY, 2.0F, thumbHeight, 1.0F, 0x66FFFFFF);
    }
 
    public static void moduleRow(
@@ -266,6 +286,41 @@ public final class GlassStyle {
       segment(poses, iconCenterX + 1.2F, iconCenterY + 1.8F, iconCenterX + 3.8F, iconCenterY + 4.2F, 1.0F, iconColor);
    }
 
+   public static void spotlight(
+      PoseStack poses, float x, float y, float w, float h, float spotX, float spotY, int color
+   ) {
+      if (w <= 0.0F || h <= 0.0F || (color >>> 24) == 0) {
+         return;
+      }
+
+      float limit = Math.min(h * 0.55F, 42.0F);
+      if (limit <= 0.5F) {
+         return;
+      }
+
+      float cx = Math.max(x + limit * 0.4F, Math.min(x + w - limit * 0.4F, spotX));
+      float cy = Math.max(y + limit * 0.4F, Math.min(y + h - limit * 0.4F, spotY));
+      int layers = 5;
+      int base = (color >>> 24) / (layers * 2);
+      if (base <= 0) {
+         return;
+      }
+
+      int rgb = color & 0xFFFFFF;
+      for (int layer = layers; layer >= 1; layer--) {
+         float radius = limit * (0.25F + 0.15F * layer);
+         GuiShapes.fill(
+            poses,
+            cx - radius,
+            cy - radius,
+            radius * 2.0F,
+            radius * 2.0F,
+            radius,
+            (base * (layers + 1 - layer)) << 24 | rgb
+         );
+      }
+   }
+
    public static void sheen(
       PoseStack poses, float x, float y, float w, float h, float progress
    ) {
@@ -273,10 +328,8 @@ public final class GlassStyle {
          return;
       }
 
-      float span = w + h * 0.6F;
-      float bandWidth = Math.max(22.0F, span * 0.26F);
-      float position = -span * 0.5F - bandWidth + (span + bandWidth * 2.0F) * progress;
-      float center = x + span * 0.5F + position;
+      float bandWidth = Math.max(18.0F, w * 0.45F);
+      float center = x - bandWidth + (w + bandWidth * 2.0F) * progress;
       float left = center - bandWidth * 0.5F;
       float right = center + bandWidth * 0.5F;
       if (right <= x || left >= x + w) {
@@ -286,19 +339,24 @@ public final class GlassStyle {
       float fadeOut = 1.0F - Math.abs(progress - 0.5F) * 2.0F;
       int peak = (int)(0x66 * Math.max(0.0F, fadeOut)) << 24 | 0xFFFFFF;
       int clear = 0x00FFFFFF;
-      float top = y + 1.0F;
-      float bottom = y + h - 1.0F;
-      float skew = h * 0.45F;
-      float topLeft = left + skew;
-      float topRight = right + skew;
+      float top = y + 2.0F;
+      float bottom = y + h - 2.0F;
+      float skew = Math.min(h * 0.35F, w * 0.45F);
+      float minX = x + 4.0F;
+      float maxX = x + w - 4.0F;
+      float mid = bandWidth * 0.42F;
+      float tLeft = Math.max(minX, Math.min(maxX, left + skew));
+      float tMid = Math.max(minX, Math.min(maxX, left + skew + mid));
+      float tRight = Math.max(minX, Math.min(maxX, right + skew));
+      float bLeft = Math.max(minX, Math.min(maxX, left));
+      float bMid = Math.max(minX, Math.min(maxX, left + mid));
+      float bRight = Math.max(minX, Math.min(maxX, right));
       GuiDrawUtils.fillQuad(
-         poses, topLeft, top, topLeft + bandWidth * 0.42F, top,
-         left + bandWidth * 0.42F, bottom, left, bottom,
+         poses, tLeft, top, tMid, top, bMid, bottom, bLeft, bottom,
          clear, peak, peak, clear
       );
       GuiDrawUtils.fillQuad(
-         poses, topLeft + bandWidth * 0.42F, top, topRight, top,
-         right, bottom, left + bandWidth * 0.42F, bottom,
+         poses, tMid, top, tRight, top, bRight, bottom, bMid, bottom,
          peak, clear, clear, peak
       );
    }

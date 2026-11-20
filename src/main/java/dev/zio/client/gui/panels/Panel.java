@@ -305,7 +305,7 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
          float cube = 1.0F - (1.0F - progress) * (1.0F - progress) * (1.0F - progress);
          scale = 0.90F + 0.10F * back;
          shift = (1.0F - cube) * 24.0F;
-         this.glassSheen = (seconds - delay - 0.24F) / 0.55F;
+         this.glassSheen = (seconds - delay - 0.06F) / 0.80F;
       }
 
       boolean hovered = this.isMouseOver(mouseX, mouseY);
@@ -455,7 +455,7 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
       boolean glass = GlassStyle.isActive();
       float visibleHeight = Math.max(this.getHeaderHeight(), this.height * expansionValue);
       if (glass) {
-         GlassStyle.panel(poseStack, this.x, this.y, this.getWidth(), visibleHeight, this.getHeaderHeight());
+         GlassStyle.panel(poseStack, this.x, this.y, this.getWidth(), visibleHeight, this.getHeaderHeight(), mouseX, mouseY);
          GlassStyle.sheen(poseStack, this.x, this.y, this.getWidth(), visibleHeight, this.glassSheen);
          GlassStyle.title(
             poseStack,
@@ -685,8 +685,12 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
       if (this.expanded) {
          if (this.isMouseOver(mouseX, mouseY)
             && !this.heightLimitDisabled) {
+            int previousOffset = this.scrollOffset;
             this.scrollOffset = this.scrollOffset
                + (int)(scrollAmount * 20.0D);
+            if (this.scrollOffset != previousOffset) {
+               GlassStyle.play(BuiltinSound.SCROLL_TICK, 0.45F);
+            }
          }
 
          for (GuiElement child : this.children) {

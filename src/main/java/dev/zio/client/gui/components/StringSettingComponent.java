@@ -10,6 +10,7 @@
 package dev.zio.client.gui.components;
 
 import dev.zio.client.gui.CursorType;
+import dev.zio.client.audio.BuiltinSound;
 import dev.zio.client.render.FontRenderer;
 import dev.zio.client.render.GuiDrawUtils;
 
@@ -104,6 +105,7 @@ public class StringSettingComponent extends SettingComponent<String> {
             }
 
             this.cursorIndex--;
+            GlassStyle.play(BuiltinSound.DELETE, 0.45F);
             break;
          case 262:
             if (this.cursorIndex
@@ -317,6 +319,7 @@ public class StringSettingComponent extends SettingComponent<String> {
       super.mouseClicked(mouseX, mouseY, button);
       if (this.isMouseOver(mouseX, mouseY) && button == 0) {
          this.editing = !this.editing;
+         GlassStyle.play(this.editing ? BuiltinSound.EXPAND : BuiltinSound.COLLAPSE, 0.6F);
          if (this.editing) {
             if (this.getClickGui()
                      .getEditingSetting()
@@ -357,6 +360,7 @@ public class StringSettingComponent extends SettingComponent<String> {
             .insert(this.cursorIndex, character)
             .toString();
          this.cursorIndex++;
+         GlassStyle.play(BuiltinSound.TYPE, 0.45F);
       }
    }
 
