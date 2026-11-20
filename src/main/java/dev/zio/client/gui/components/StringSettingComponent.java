@@ -241,9 +241,9 @@ public class StringSettingComponent extends SettingComponent<String> {
                      + this.getTextYOffset()
                      - this.getHoverAnimationValue()
                      + this.yOffset,
-                  this.getUiModule()
-                     .textColorSetting
-                     .getValue()
+                  GlassStyle.isActive()
+                     ? new Color(GlassStyle.highlightText(), true)
+                     : this.getUiModule().textColorSetting.getValue()
                );
          }
 
@@ -267,9 +267,9 @@ public class StringSettingComponent extends SettingComponent<String> {
                      + this.getTextYOffset()
                      - this.getHoverAnimationValue()
                      + this.yOffset,
-                  this.getUiModule()
-                     .textColorSetting
-                     .getValue()
+                  GlassStyle.isActive()
+                     ? new Color(GlassStyle.highlightText(), true)
+                     : this.getUiModule().textColorSetting.getValue()
                );
          }
 
@@ -293,9 +293,9 @@ public class StringSettingComponent extends SettingComponent<String> {
                      + this.getTextYOffset()
                      - this.getHoverAnimationValue()
                      + this.yOffset,
-                  this.getUiModule()
-                     .textColorSetting
-                     .getValue()
+                  GlassStyle.isActive()
+                     ? new Color(GlassStyle.highlightText(), true)
+                     : this.getUiModule().textColorSetting.getValue()
                )
          );
       }

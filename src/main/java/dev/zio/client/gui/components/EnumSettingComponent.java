@@ -298,9 +298,9 @@ public class EnumSettingComponent<E extends Enum<E> & NamedEntry> extends Settin
                   + this.getTextYOffset()
                   - this.getHoverAnimationValue()
                   + this.componentYOffset,
-               this.getUiModule()
-                  .textColorSetting
-                  .getValue()
+               GlassStyle.isActive()
+                  ? new Color(GlassStyle.highlightText(), true)
+                  : this.getUiModule().textColorSetting.getValue()
             )
       );
       int rowYOffset = this.getBaseHeight();

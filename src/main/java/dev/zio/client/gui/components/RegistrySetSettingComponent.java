@@ -87,7 +87,9 @@ public class RegistrySetSettingComponent<E> extends SettingComponent<java.util.S
                      .getX()
                   + 4,
                textY,
-               this.getUiModule().textColorSetting.getValue()
+               GlassStyle.isActive()
+                  ? new Color(GlassStyle.highlightText(), true)
+                  : this.getUiModule().textColorSetting.getValue()
             );
          FontRenderer.INSTANCE
             .drawWithShadow(
@@ -101,7 +103,9 @@ public class RegistrySetSettingComponent<E> extends SettingComponent<java.util.S
                      .getWidth(selectionCount)
                   - 2.5F,
                textY,
-               this.getUiModule().textColorSetting.getValue()
+               GlassStyle.isActive()
+                  ? new Color(GlassStyle.highlightText(), true)
+                  : this.getUiModule().textColorSetting.getValue()
             );
       }
    }

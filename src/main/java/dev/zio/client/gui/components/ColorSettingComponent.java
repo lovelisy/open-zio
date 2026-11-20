@@ -13,6 +13,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import dev.zio.client.ClientAccess;
 import dev.zio.client.gui.CloseState;
 import dev.zio.client.gui.GuiElement;
+import dev.zio.client.gui.GlassStyle;
 import dev.zio.client.gui.panels.Panel;
 import dev.zio.client.gui.screens.ClientScreen;
 import dev.zio.client.gui.components.ColorActionButton;
@@ -196,7 +197,9 @@ public class ColorSettingComponent extends SettingComponent<Color> implements Cl
       this.renderWithTextScroll(poses, this.getDisplayName(), () -> FontRenderer.INSTANCE.drawWithShadow(
          poses, this.getDisplayName(), this.panel.getX() + 4,
          this.panel.getY() + this.getTextYOffset() - this.getHoverAnimationValue() + this.yOffset,
-         this.getUiModule().textColorSetting.getValue()
+         GlassStyle.isActive()
+            ? new Color(GlassStyle.highlightText(), true)
+            : this.getUiModule().textColorSetting.getValue()
       ));
       float previewX = this.getPickerX() + this.panel.getWidth() - 11;
       float previewY = this.getPickerY() + 2;
@@ -359,7 +362,9 @@ public class ColorSettingComponent extends SettingComponent<Color> implements Cl
       public void render(PoseStack poses, double mouseX, double mouseY) {
          super.render(poses, mouseX, mouseY);
          drawCenteredLabel(poses, lang("Sync", "Sync"), this.panel, this.yOffset, this.getTextYOffset(), this.getHoverAnimationValue(),
-            this.getUiModule().textColorSetting.getValue());
+            GlassStyle.isActive()
+               ? new Color(GlassStyle.highlightText(), true)
+               : this.getUiModule().textColorSetting.getValue());
       }
    }
 
@@ -443,7 +448,9 @@ public class ColorSettingComponent extends SettingComponent<Color> implements Cl
       public void render(PoseStack poses, double mouseX, double mouseY) {
          super.render(poses, mouseX, mouseY);
          drawCenteredLabel(poses, lang("Rainbow", "Rainbow"), this.panel, this.yOffset, this.getTextYOffset(), this.getHoverAnimationValue(),
-            this.getUiModule().textColorSetting.getValue());
+            GlassStyle.isActive()
+               ? new Color(GlassStyle.highlightText(), true)
+               : this.getUiModule().textColorSetting.getValue());
       }
    }
 

@@ -207,9 +207,7 @@ public final class GlassStyle {
          return;
       }
 
-      GuiShapes.fillGradient(
-         poses, x + 4.0F, y + 1.0F, width, h - 2.0F, ROW_RADIUS - 1.0F, accent(0.78F), accent(0.52F)
-      );
+      GuiShapes.fill(poses, x + 4.0F, y + h - 2.0F, width, 1.5F, 0.75F, accent(0.85F));
    }
 
    public static void highlight(
@@ -225,14 +223,27 @@ public final class GlassStyle {
       float rowWidth = w - 6.0F;
       float rowY = y + 1.0F;
       float rowHeight = h - 2.0F;
-      if (enabledProgress > 0.01F) {
-         GuiShapes.fill(poses, rowX, rowY, rowWidth, rowHeight, ROW_RADIUS - 1.0F, accent(0.16F * enabledProgress));
-      }
-
       if (hoverProgress > 0.01F) {
          int wash = (int)(0x1A * hoverProgress) << 24 | 0xFFFFFF;
          GuiShapes.fill(poses, rowX, rowY, rowWidth, rowHeight, ROW_RADIUS - 1.0F, wash);
       }
+   }
+
+   public static int highlightText() {
+      Color accent = UIModule.INSTANCE.colorSetting.getValue();
+      int rgb = accent.getRGB() & 0xFFFFFF;
+      float[] hsb = Color.RGBtoHSB(rgb >> 16 & 0xFF, rgb >> 8 & 0xFF, rgb & 0xFF, null);
+      if (hsb[1] < 0.12F) {
+         return 0xFFFFFFFF;
+      }
+
+      float saturation = Math.max(hsb[1], Math.min(1.0F, hsb[1] * 1.35F + 0.15F));
+      int bright = Color.HSBtoRGB(hsb[0], saturation, 1.0F) & 0xFFFFFF;
+      return 0xFF000000 | bright;
+   }
+
+   public static int settingText(int baseArgb, boolean highlighted) {
+      return highlighted ? highlightText() : baseArgb;
    }
 
    public static void enumList(

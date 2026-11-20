@@ -95,7 +95,9 @@ public class EnumOptionRow<E extends Enum<E> & NamedEntry> extends AbstractCompo
                + this.getTextYOffset()
                - 1.0F
                - this.getHoverAnimationValue(),
-            this.getUiModule().textColorSetting.getValue()
+            GlassStyle.isActive()
+               ? new Color(GlassStyle.highlightText(), true)
+               : this.getUiModule().textColorSetting.getValue()
          );
    }
 

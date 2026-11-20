@@ -118,7 +118,9 @@ public class KeybindComponent extends AbstractComponent {
                + this.getTextYOffset()
                - this.getHoverAnimationValue()
                + this.yOffset,
-            this.getUiModule().textColorSetting.getValue()
+            GlassStyle.isActive()
+               ? new Color(GlassStyle.highlightText(), true)
+               : this.getUiModule().textColorSetting.getValue()
          );
    }
 

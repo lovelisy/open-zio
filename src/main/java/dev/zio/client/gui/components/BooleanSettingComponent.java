@@ -103,9 +103,11 @@ public class BooleanSettingComponent extends SettingComponent<Boolean> {
                      + this.getTextYOffset()
                      - this.getHoverAnimationValue()
                      + this.yOffset,
-                  this.getUiModule()
-                     .textColorSetting
-                     .getValue()
+                  GlassStyle.isActive() && this.setting.getValue()
+                     ? new Color(GlassStyle.highlightText(), true)
+                     : this.getUiModule()
+                        .textColorSetting
+                        .getValue()
                )
          );
       }

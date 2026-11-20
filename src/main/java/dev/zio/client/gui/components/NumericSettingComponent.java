@@ -248,9 +248,9 @@ public class NumericSettingComponent<N extends Number> extends SettingComponent<
                   + this.getTextYOffset()
                   - this.getHoverAnimationValue()
                   + this.yOffset,
-               this.getUiModule()
-                  .textColorSetting
-                  .getValue()
+               GlassStyle.isActive()
+                  ? new Color(GlassStyle.highlightText(), true)
+                  : this.getUiModule().textColorSetting.getValue()
             )
       );
    }
