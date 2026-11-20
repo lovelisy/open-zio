@@ -77,7 +77,7 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
    private boolean pressPushed;
    public float animatedHeight;
 
-   private int getEnabledGlassTextColor() {
+   private Color getEnabledGlassTextColor() {
       Color accent = UIModule.INSTANCE.colorSetting.getValue();
       int rgb = accent.getRGB() & 0xFFFFFF;
       int r = rgb >> 16 & 0xFF;
@@ -87,7 +87,7 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
       r = Math.min(255, r + boost);
       g = Math.min(255, g + boost);
       b = Math.min(255, b + boost);
-      return 0xFF000000 | r << 16 | g << 8 | b;
+      return new Color(0xFF000000 | r << 16 | g << 8 | b, true);
    }
 
    private float getPressScale() {
