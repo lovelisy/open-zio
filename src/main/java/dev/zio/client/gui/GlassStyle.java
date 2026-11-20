@@ -214,16 +214,7 @@ public final class GlassStyle {
       float rowY = y + 1.0F;
       float rowHeight = h - 2.0F;
       if (enabledProgress > 0.01F) {
-         GuiShapes.fillGradient(
-            poses,
-            rowX,
-            rowY,
-            rowWidth,
-            rowHeight,
-            ROW_RADIUS - 1.0F,
-            accent(0.13F * enabledProgress),
-            accent(0.07F * enabledProgress)
-         );
+         GuiShapes.fill(poses, rowX, rowY, rowWidth, rowHeight, ROW_RADIUS - 1.0F, accent(0.16F * enabledProgress));
       }
 
       if (hoverProgress > 0.01F) {
@@ -239,11 +230,7 @@ public final class GlassStyle {
          return;
       }
 
-      GuiShapes.fill(poses, x + 4.0F, y + 1.0F, w - 8.0F, h - 2.0F, 6.0F, 0x30000000);
-      GuiShapes.outline(
-         poses, x + 4.0F, y + 1.0F, w - 8.0F, h - 2.0F, 6.0F, 0.6F,
-         0x06FFFFFF, 0x1CFFFFFF
-      );
+      GuiShapes.fill(poses, x + 4.0F, y + 1.0F, w - 8.0F, h - 2.0F, 6.0F, 0x26000000);
    }
 
    public static void searchBar(
@@ -287,30 +274,32 @@ public final class GlassStyle {
       }
 
       float span = w + h * 0.6F;
-      float bandWidth = Math.max(10.0F, span * 0.18F);
+      float bandWidth = Math.max(22.0F, span * 0.26F);
       float position = -span * 0.5F - bandWidth + (span + bandWidth * 2.0F) * progress;
-      float left = x + span * 0.5F + position;
-      float right = left + bandWidth;
+      float center = x + span * 0.5F + position;
+      float left = center - bandWidth * 0.5F;
+      float right = center + bandWidth * 0.5F;
       if (right <= x || left >= x + w) {
          return;
       }
 
-      int fade = (int)(0x1E * (1.0F - Math.abs(progress - 0.5F) * 2.0F)) << 24;
-      if ((fade >>> 24) <= 0) {
-         return;
-      }
-
+      float fadeOut = 1.0F - Math.abs(progress - 0.5F) * 2.0F;
+      int peak = (int)(0x66 * Math.max(0.0F, fadeOut)) << 24 | 0xFFFFFF;
+      int clear = 0x00FFFFFF;
       float top = y + 1.0F;
       float bottom = y + h - 1.0F;
-      int clear = 0x00FFFFFF;
-      int soft = fade | 0xFFFFFF;
+      float skew = h * 0.45F;
+      float topLeft = left + skew;
+      float topRight = right + skew;
       GuiDrawUtils.fillQuad(
-         poses, left, top, left + bandWidth * 0.45F, top, left + bandWidth * 0.45F, bottom, left, bottom,
-         clear, soft, soft, clear
+         poses, topLeft, top, topLeft + bandWidth * 0.42F, top,
+         left + bandWidth * 0.42F, bottom, left, bottom,
+         clear, peak, peak, clear
       );
       GuiDrawUtils.fillQuad(
-         poses, left + bandWidth * 0.45F, top, right, top, right, bottom, left + bandWidth * 0.45F, bottom,
-         soft, clear, clear, soft
+         poses, topLeft + bandWidth * 0.42F, top, topRight, top,
+         right, bottom, left + bandWidth * 0.42F, bottom,
+         peak, clear, clear, peak
       );
    }
 

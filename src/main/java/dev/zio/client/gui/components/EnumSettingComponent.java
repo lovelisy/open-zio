@@ -251,7 +251,7 @@ public class EnumSettingComponent<E extends Enum<E> & NamedEntry> extends Settin
 
          this.optionRows
             .forEach(row -> row.render(poseStack, mouseX, mouseY));
-         if (UIModule.INSTANCE.lineSetting.getValue()) {
+         if (UIModule.INSTANCE.lineSetting.getValue() && !GlassStyle.isActive()) {
             GuiDrawUtils.drawRectOutline(
                poseStack,
                this.panel
