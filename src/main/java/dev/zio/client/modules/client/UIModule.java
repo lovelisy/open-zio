@@ -58,7 +58,6 @@ public final class UIModule extends Module {
    private final AtomicBoolean panelResetPending = new AtomicBoolean(false);
    private final Setting<Boolean> resetSetting;
    public final Setting<StyleChoice> styleSetting;
-   public final Setting<Boolean> designSetting;
    public final Setting<GuiStyle> guiStyleSetting;
    public final Setting<Boolean> guiSoundSetting;
    public final Setting<Float> guiVolumeSetting;
@@ -163,7 +162,7 @@ public final class UIModule extends Module {
          return;
       }
       ClickGuiScreen screen = ClientContext.getClickGui();
-      screen.resetPanelPositions();
+      screen.liftPanelsBelowGlassSearchBar();
       this.resetSetting.setValue(true);
       this.panelResetPending.set(false);
    }
@@ -199,13 +198,7 @@ public final class UIModule extends Module {
    public UIModule() {
       super("UI", "Displays the client's click gui.", ModuleCategory.CLIENT, new String[0]);
       this.resetSetting = this.add(new BooleanSetting(("Reset"), true));
-      BooleanSetting designOption = new BooleanSetting("DesignGroup", false);
-      designOption.markAsGroup();
-      designOption.markVisibilityDependency();
-      this.designSetting = this.add(designOption);
-      this.guiStyleSetting = this.add(new EnumSetting<>("Design", UIModule.GuiStyle.VANILLA, ignored -> this.designSetting.isExpanded()));
-      this.guiSoundSetting = this.add(new BooleanSetting("GuiSound", true, ignored -> this.designSetting.isExpanded()));
-      this.guiVolumeSetting = this.add(new NumberSetting<>("GuiVolume", 0.7F, 0.0F, 1.0F, ignored -> this.designSetting.isExpanded()));
+      this.guiStyleSetting = this.add(new EnumSetting<>("Design", UIModule.GuiStyle.VANILLA));
       this.styleSetting = this.add(new EnumSetting<>("Style", UIModule.StyleChoice.PLAIN));
       this.animSpeedSetting = this.add(new NumberSetting<>("AnimSpeed", 1.0F, 0.5F, 2.5F));
       this.scaleSetting = this.add(new NumberSetting<>("Scale", 1.0F, 0.1F, 2.0F));
@@ -235,6 +228,9 @@ public final class UIModule extends Module {
       soundsOption.markAsGroup();
       soundsOption.markVisibilityDependency();
       this.soundsSetting = this.add(soundsOption);
+      Predicate<Object> guiSoundVisibility = ignored -> this.soundsSetting.isExpanded();
+      this.guiSoundSetting = this.add(new BooleanSetting("GuiSound", true, guiSoundVisibility));
+      this.guiVolumeSetting = this.add(new NumberSetting<>("GuiVolume", 0.7F, 0.0F, 1.0F, guiSoundVisibility));
       Predicate<Object> hoverVisibility = ignored -> this.soundsSetting.isExpanded();
       BooleanSetting hoverOption = new BooleanSetting("Hover", true, hoverVisibility);
       hoverOption.markVisibilityDependency();
@@ -333,6 +329,7 @@ public final class UIModule extends Module {
       Setting<StyleChoice> styleCallbackSetting = this.styleSetting;
       Runnable styleChangeCallback = () -> this.panelResetPending.set(true);
       styleCallbackSetting.setChangeCallback(styleChangeCallback);
+      this.guiStyleSetting.setChangeCallback(() -> this.panelResetPending.set(true));
       Setting<LanguageChoice> languageCallbackSetting = this.languageSetting;
       Runnable languageChangeCallback = () -> {
          LanguageTable tableCapture = ClientContext.languageTable;
@@ -344,7 +341,6 @@ public final class UIModule extends Module {
       };
       languageCallbackSetting.setChangeCallback(languageChangeCallback);
       this.guiStyleSetting.setConfigName("Design");
-      this.designSetting.setConfigName("DesignGroup");
       this.hoverSoundSetting.setConfigName("HoverSound");
       this.hoverVolumeSetting.setConfigName("HoverVolume");
       this.leftClickSoundSetting.setConfigName("LeftClickSound");

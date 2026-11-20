@@ -645,6 +645,20 @@ public class ClientScreen extends Screen implements ClientAccess {
       this.closing = true;
    }
 
+   public static final int GLASS_SEARCH_BOTTOM = 34;
+
+   public void liftPanelsBelowGlassSearchBar() {
+      if (!GlassStyle.isActive()) {
+         return;
+      }
+
+      for (Panel panel : this.panels) {
+         if (panel.getY() < GLASS_SEARCH_BOTTOM) {
+            panel.setY(GLASS_SEARCH_BOTTOM);
+         }
+      }
+   }
+
    public void resetPanelPositions() {
       this.resetSeasonalParticles();
       this.panels
@@ -656,7 +670,7 @@ public class ClientScreen extends Screen implements ClientAccess {
             )
          );
       int panelX = PANEL_START_X;
-      int panelY = GlassStyle.isActive() ? PANEL_START_Y + 30 : PANEL_START_Y;
+      int panelY = GlassStyle.isActive() ? GLASS_SEARCH_BOTTOM : PANEL_START_Y;
 
       for (Panel panel : this.panels) {
          panel.setX(

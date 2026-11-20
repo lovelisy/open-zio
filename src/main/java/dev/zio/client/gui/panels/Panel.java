@@ -227,7 +227,7 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
          this.setY(
             (int)Math.clamp(
                mouseY - this.dragOffsetY,
-               0.0,
+               GlassStyle.isActive() ? ClientScreen.GLASS_SEARCH_BOTTOM : 0.0,
                ClientAccess.zioMinecraft.getWindow().getGuiScaledHeight()
                      / guiScale
                   - this.getHeight()

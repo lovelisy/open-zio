@@ -189,14 +189,6 @@ public final class GlassStyle {
       float rowWidth = w - 6.0F;
       float rowY = y + 1.0F;
       float rowHeight = h - 2.0F;
-      if (enabledProgress > 0.01F) {
-         GuiShapes.fillGradient(
-            poses, rowX, rowY, rowWidth, rowHeight, ROW_RADIUS, accent(0.72F * enabledProgress), accent(0.5F * enabledProgress)
-         );
-         int sheen = (int)(0x1F * enabledProgress) << 24 | 0xFFFFFF;
-         GuiShapes.fillGradient(poses, rowX, rowY, rowWidth, rowHeight * 0.5F, ROW_RADIUS, sheen, 0x00FFFFFF);
-      }
-
       if (hoverProgress > 0.01F) {
          int wash = (int)(0x26 * hoverProgress) << 24 | 0xFFFFFF;
          GuiShapes.fill(poses, rowX, rowY, rowWidth, rowHeight, ROW_RADIUS, wash);
