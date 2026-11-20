@@ -10,9 +10,7 @@
 package dev.zio.client.gui.components;
 
 import dev.zio.client.utils.InterpolatedFloat;
-import dev.zio.client.audio.BuiltinSound;
 import dev.zio.client.gui.CloseState;
-import dev.zio.client.gui.GlassStyle;
 import dev.zio.client.render.GuiDrawUtils;
 import dev.zio.client.gui.CursorType;
 import dev.zio.client.utils.ElapsedTimer;
@@ -41,7 +39,6 @@ public class NumericSettingComponent<N extends Number> extends SettingComponent<
    private boolean dragging;
    private boolean cursorVisible = false;
    private float sliderFillWidth;
-   private long lastSliderTickAt;
    private String inputText = "";
 
    private String getBlinkingCursor() {
@@ -77,7 +74,6 @@ public class NumericSettingComponent<N extends Number> extends SettingComponent<
             if (!this.inputText.isEmpty()) {
                this.inputText = this.inputText
                   .substring(0, this.inputText.length() - 1);
-               GlassStyle.play(BuiltinSound.DELETE, 0.5F);
             }
       }
    }
@@ -181,40 +177,29 @@ public class NumericSettingComponent<N extends Number> extends SettingComponent<
          ClientScreen.cursor = CursorType.INPUT;
       }
 
-      if (GlassStyle.isActive()) {
-         GlassStyle.settingProgress(
-            poseStack,
-            this.panel.getX(),
-            this.panel.getY() + this.yOffset,
-            this.panel.getWidth(),
-            this.getHeight(),
-            this.sliderFillAnimation.updateAndGet() / Math.max(1.0F, this.panel.getWidth() - 3.0F)
-         );
-      } else {
-         GuiDrawUtils.fillRect(
-            poseStack,
+      GuiDrawUtils.fillRect(
+         poseStack,
+         this.sliderX
+            + this.getHorizontalPadding(),
+         this.sliderY
+            + 0.5F,
+         (int)(
             this.sliderX
-               + this.getHorizontalPadding(),
-            this.sliderY
-               + 0.5F,
-            (int)(
-               this.sliderX
-                  + Mth.clamp(
-                     this.sliderFillAnimation
-                        .updateAndGet(),
-                     0.0F,
-                     this.panel
-                           .getWidth()
-                        - (3)
-                  )
-                  + 2.0F
-            ),
-            this.sliderY
-                  + this.getHeight()
-               - 0.5F,
-            this.getUiModule().colorSetting.getValue()
-         );
-      }
+               + Mth.clamp(
+                  this.sliderFillAnimation
+                     .updateAndGet(),
+                  0.0F,
+                  this.panel
+                        .getWidth()
+                     - (3)
+               )
+               + 2.0F
+         ),
+         this.sliderY
+               + this.getHeight()
+            - 0.5F,
+         this.getUiModule().colorSetting.getValue()
+      );
       String unitText = this.numberSetting.getUnit();
       String valueText = ((NUMBER_FORMAT.format((this.setting.getValue()).doubleValue())) + "\u0001")
          .replaceFirst("\u0001", Matcher.quoteReplacement(String.valueOf(unitText)));
@@ -248,9 +233,9 @@ public class NumericSettingComponent<N extends Number> extends SettingComponent<
                   + this.getTextYOffset()
                   - this.getHoverAnimationValue()
                   + this.yOffset,
-               GlassStyle.isActive()
-                  ? new Color(GlassStyle.highlightText(), true)
-                  : this.getUiModule().textColorSetting.getValue()
+               this.getUiModule()
+                  .textColorSetting
+                  .getValue()
             )
       );
    }
@@ -357,7 +342,6 @@ public class NumericSettingComponent<N extends Number> extends SettingComponent<
             / (maximumValue - minimumValue)
       );
       if (this.dragging) {
-         String beforeTick = String.valueOf(this.setting.getValue());
          if (mouseOffset == 0.0) {
             if (roundingStep == 1.0D) {
                this.numberSetting
@@ -388,14 +372,6 @@ public class NumericSettingComponent<N extends Number> extends SettingComponent<
                   .setNumber(
                      roundSliderValue(clampedValue)
                   );
-            }
-         }
-
-         if (!beforeTick.equals(String.valueOf(this.setting.getValue()))) {
-            long now = System.currentTimeMillis();
-            if (now - this.lastSliderTickAt >= 35L) {
-               this.lastSliderTickAt = now;
-               GlassStyle.play(BuiltinSound.SLIDER_TICK, 0.7F);
             }
          }
       }
@@ -451,7 +427,6 @@ public class NumericSettingComponent<N extends Number> extends SettingComponent<
 
       this.inputText = (String.valueOf(previousInputText) + "\u0001")
          .replaceFirst("\u0001", String.valueOf((char)characterCode));
-      GlassStyle.play(BuiltinSound.TYPE, 0.5F);
    }
 
 }

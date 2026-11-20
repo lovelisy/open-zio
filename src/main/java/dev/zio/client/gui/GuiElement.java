@@ -22,11 +22,6 @@ public interface GuiElement {
    }
 
    default int getBaseHeight() {
-      UIModule ui = UIModule.INSTANCE;
-      if (ui != null && ui.guiStyleSetting != null && ui.guiStyleSetting.getValue() == UIModule.GuiStyle.GLASS) {
-         return 15;
-      }
-
       return UIModule.INSTANCE.styleSetting.getValue().getHeightPadding()
          + BASE_LINE_HEIGHT;
    }

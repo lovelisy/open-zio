@@ -10,8 +10,6 @@
 package dev.zio.client.gui.components;
 
 import dev.zio.client.render.GuiDrawUtils;
-import dev.zio.client.audio.BuiltinSound;
-import dev.zio.client.gui.GlassStyle;
 import dev.zio.client.gui.panels.Panel;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -34,38 +32,27 @@ public class ActionButtonComponent extends ButtonComponent {
    @Override
    public void render(PoseStack poseStack, double mouseX, double mouseY) {
       if (this.isHighlighted()) {
-         if (GlassStyle.isActive()) {
-            GlassStyle.highlight(
-               poseStack,
-               this.panel.getX(),
-               this.panel.getY() + this.yOffset,
-               this.panel.getWidth(),
-               this.getHeight(),
-               GlassStyle.accent(0.22F)
-            );
-         } else {
-            GuiDrawUtils.fillRect(
-               poseStack,
-               this.panel
-                     .getX()
-                  + 1,
-               this.panel
-                        .getY()
-                     + this.yOffset
-                  + 0.5F,
-               this.panel
-                     .getX()
-                  + this.panel
-                     .getWidth()
-                  - 1,
-               this.panel
-                        .getY()
-                     + this.yOffset
+         GuiDrawUtils.fillRect(
+            poseStack,
+            this.panel
+                  .getX()
+               + 1,
+            this.panel
+                     .getY()
+                  + this.yOffset
+               + 0.5F,
+            this.panel
+                  .getX()
+               + this.panel
+                  .getWidth()
+               - 1,
+            this.panel
+                     .getY()
+                  + this.yOffset
                   + this.getHeight()
-                  - 0.5F,
-               this.getUiModule().colorSetting.getValue()
-            );
-         }
+               - 0.5F,
+            this.getUiModule().colorSetting.getValue()
+         );
       }
 
       super.render(poseStack, mouseX, mouseY);
@@ -76,7 +63,6 @@ public class ActionButtonComponent extends ButtonComponent {
       super.mouseClicked(mouseX, mouseY, button);
       if (this.isMouseOver(mouseX, mouseY) && button == 0) {
          this.action.run();
-         GlassStyle.play(BuiltinSound.CLICK, 0.7F);
       }
    }
 

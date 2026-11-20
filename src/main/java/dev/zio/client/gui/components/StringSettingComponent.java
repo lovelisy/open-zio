@@ -10,12 +10,10 @@
 package dev.zio.client.gui.components;
 
 import dev.zio.client.gui.CursorType;
-import dev.zio.client.audio.BuiltinSound;
 import dev.zio.client.render.FontRenderer;
 import dev.zio.client.render.GuiDrawUtils;
 
 import dev.zio.client.gui.CloseState;
-import dev.zio.client.gui.GlassStyle;
 import dev.zio.client.gui.components.SettingComponent;
 import dev.zio.client.utils.ElapsedTimer;
 import dev.zio.client.ClientAccess;
@@ -105,7 +103,6 @@ public class StringSettingComponent extends SettingComponent<String> {
             }
 
             this.cursorIndex--;
-            GlassStyle.play(BuiltinSound.DELETE, 0.45F);
             break;
          case 262:
             if (this.cursorIndex
@@ -158,39 +155,27 @@ public class StringSettingComponent extends SettingComponent<String> {
          ClientScreen.cursor = CursorType.INPUT;
       }
 
-      if (GlassStyle.isActive()) {
-         GlassStyle.settingRow(
-            poseStack,
-            this.panel.getX(),
-            this.panel.getY() + this.yOffset,
-            this.panel.getWidth(),
-            this.getHeight(),
-            1.0F,
-            this.getHoverAnimationValue()
-         );
-      } else {
-         GuiDrawUtils.fillRect(
-            poseStack,
-            this.panel
-                  .getX()
-               + this.getHorizontalPadding(),
-            this.panel
-                     .getY()
-                  + this.yOffset
-               + 0.5F,
-            this.panel
-                  .getX()
-               + this.panel
-                  .getWidth()
-               - 1,
-            this.panel
-                     .getY()
-                  + this.yOffset
-                  + this.getHeight()
-               - 0.5F,
-            this.getUiModule().colorSetting.getValue()
-         );
-      }
+      GuiDrawUtils.fillRect(
+         poseStack,
+         this.panel
+               .getX()
+            + this.getHorizontalPadding(),
+         this.panel
+                  .getY()
+               + this.yOffset
+            + 0.5F,
+         this.panel
+               .getX()
+            + this.panel
+               .getWidth()
+            - 1,
+         this.panel
+                  .getY()
+               + this.yOffset
+               + this.getHeight()
+            - 0.5F,
+         this.getUiModule().colorSetting.getValue()
+      );
       if (this.editingText != null) {
          this.cursorIndex = Mth.clamp(
             this.cursorIndex,
@@ -241,9 +226,9 @@ public class StringSettingComponent extends SettingComponent<String> {
                      + this.getTextYOffset()
                      - this.getHoverAnimationValue()
                      + this.yOffset,
-                  GlassStyle.isActive()
-                     ? new Color(GlassStyle.highlightText(), true)
-                     : this.getUiModule().textColorSetting.getValue()
+                  this.getUiModule()
+                     .textColorSetting
+                     .getValue()
                );
          }
 
@@ -267,9 +252,9 @@ public class StringSettingComponent extends SettingComponent<String> {
                      + this.getTextYOffset()
                      - this.getHoverAnimationValue()
                      + this.yOffset,
-                  GlassStyle.isActive()
-                     ? new Color(GlassStyle.highlightText(), true)
-                     : this.getUiModule().textColorSetting.getValue()
+                  this.getUiModule()
+                     .textColorSetting
+                     .getValue()
                );
          }
 
@@ -293,9 +278,9 @@ public class StringSettingComponent extends SettingComponent<String> {
                      + this.getTextYOffset()
                      - this.getHoverAnimationValue()
                      + this.yOffset,
-                  GlassStyle.isActive()
-                     ? new Color(GlassStyle.highlightText(), true)
-                     : this.getUiModule().textColorSetting.getValue()
+                  this.getUiModule()
+                     .textColorSetting
+                     .getValue()
                )
          );
       }
@@ -319,7 +304,6 @@ public class StringSettingComponent extends SettingComponent<String> {
       super.mouseClicked(mouseX, mouseY, button);
       if (this.isMouseOver(mouseX, mouseY) && button == 0) {
          this.editing = !this.editing;
-         GlassStyle.play(this.editing ? BuiltinSound.EXPAND : BuiltinSound.COLLAPSE, 0.6F);
          if (this.editing) {
             if (this.getClickGui()
                      .getEditingSetting()
@@ -360,7 +344,6 @@ public class StringSettingComponent extends SettingComponent<String> {
             .insert(this.cursorIndex, character)
             .toString();
          this.cursorIndex++;
-         GlassStyle.play(BuiltinSound.TYPE, 0.45F);
       }
    }
 

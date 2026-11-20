@@ -11,7 +11,6 @@ package dev.zio.client.gui.panels;
 
 import dev.zio.client.ClientAccess;
 import dev.zio.client.ClientContext;
-import dev.zio.client.audio.BuiltinSound;
 import dev.zio.client.gui.screens.ClientScreen;
 import dev.zio.client.render.GuiDrawUtils;
 import dev.zio.client.utils.InterpolatedFloat;
@@ -20,7 +19,6 @@ import dev.zio.client.utils.ClampedInterpolatedFloat;
 import dev.zio.client.utils.inventory.RegistryContainer;
 import dev.zio.client.render.ColorUtils;
 import dev.zio.client.gui.GuiElement;
-import dev.zio.client.gui.GlassStyle;
 import dev.zio.client.render.FontRenderer;
 import dev.zio.client.gui.ScissorStack;
 import dev.zio.client.render.GuiScaleUtils;
@@ -61,10 +59,6 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
    private boolean heightLimitDisabled;
    private int scrollOffset;
    private int scrollRecoveryCounter;
-   private int glassRank;
-   private int glassRankCount = 1;
-   private float glassSheen = -1.0F;
-   private final FloatAnimation glassLiftAnimation = new FloatAnimation();
 
    private static final float SCROLL_RECOVERY_FPS_BASE = 200.0F;
    private static final float SCROLL_RECOVERY_SPEED = 20.0F;
@@ -227,7 +221,7 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
          this.setY(
             (int)Math.clamp(
                mouseY - this.dragOffsetY,
-               GlassStyle.isActive() ? ClientScreen.GLASS_SEARCH_BOTTOM : 0.0,
+               0.0,
                ClientAccess.zioMinecraft.getWindow().getGuiScaledHeight()
                      / guiScale
                   - this.getHeight()
@@ -255,73 +249,10 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
    }
 
    public int getHeaderHeight() {
-      if (GlassStyle.isActive()) {
-         return GlassStyle.HEADER_HEIGHT;
-      }
-
       return this.getUiModule().styleSetting.getValue()
             == UIModule.StyleChoice.SLIM
          ? (int)(12L)
          : (int)(14L);
-   }
-
-   protected String getHeaderStatus() {
-      return null;
-   }
-
-   public void setGlassRank(int rank, int count) {
-      this.glassRank = Math.max(0, rank);
-      this.glassRankCount = Math.max(1, count);
-   }
-
-   private void applyGlassEntrance(PoseStack poseStack, double mouseX, double mouseY) {
-      this.glassSheen = -1.0F;
-      if (!GlassStyle.isActive()) {
-         this.glassLiftAnimation.setTarget(0.0F, 1L);
-         return;
-      }
-
-      Object screenCandidate = ClientAccess.zioMinecraft == null ? null : ClientAccess.zioMinecraft.screen;
-      if (!(screenCandidate instanceof ClientScreen screen)) {
-         this.glassLiftAnimation.setTarget(0.0F, 1L);
-         return;
-      }
-
-      long elapsed = System.currentTimeMillis() - screen.getTransitionStartedAt();
-      float seconds = elapsed / 1000.0F;
-      float scale;
-      float shift;
-      if (screen.isClosing()) {
-         long delay = (long)(this.glassRankCount - 1 - this.glassRank) * 30L;
-         float progress = Mth.clamp((elapsed - delay) / 220.0F, 0.0F, 1.0F);
-         float eased = progress * progress * progress;
-         scale = 1.0F - 0.12F * eased;
-         shift = 14.0F * eased;
-      } else {
-         float delay = this.glassRank * 0.055F;
-         float progress = Mth.clamp((seconds - delay) / 0.45F, 0.0F, 1.0F);
-         float inverse = progress - 1.0F;
-         float back = 1.0F + 2.70158F * inverse * inverse * inverse + 1.70158F * inverse * inverse;
-         float cube = 1.0F - (1.0F - progress) * (1.0F - progress) * (1.0F - progress);
-         scale = 0.90F + 0.10F * back;
-         shift = (1.0F - cube) * 24.0F;
-         this.glassSheen = (seconds - delay - 0.06F) / 0.80F;
-      }
-
-      boolean hovered = this.isMouseOver(mouseX, mouseY);
-      this.glassLiftAnimation.setTarget(hovered ? 1.0F : 0.0F, 170L);
-      float lift = this.glassLiftAnimation.getValue();
-      scale *= 1.0F + 0.012F * lift;
-
-      if (Math.abs(scale - 1.0F) < 0.0001F && Math.abs(shift) < 0.0001F) {
-         return;
-      }
-
-      float centerX = this.x + this.getWidth() / 2.0F;
-      float centerY = this.y + this.getHeight() / 2.0F;
-      poseStack.translate(centerX, centerY, 0.0F);
-      poseStack.scale(scale, scale, 1.0F);
-      poseStack.translate(-centerX, -centerY + shift, 0.0F);
    }
 
    @Override
@@ -430,8 +361,6 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
 
    @Override
    public void render(PoseStack poseStack, double mouseX, double mouseY) {
-      poseStack.pushPose();
-      this.applyGlassEntrance(poseStack, mouseX, mouseY);
       Color uiColor = this.getUiModule().colorSetting.getValue();
       this.expansionAnimation.setTarget(this.expanded ? 1.0F : 0.0F);
       float expansionValue = this.expansionAnimation
@@ -452,53 +381,32 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
       float headerVerticalOffset = this.getUiModule().lineSetting.getValue()
          ? 0.0F
          : 0.5F;
-      boolean glass = GlassStyle.isActive();
-      float visibleHeight = Math.max(this.getHeaderHeight(), this.height * expansionValue);
-      if (glass) {
-         GlassStyle.panel(
-            poseStack, this.x, this.y, this.getWidth(), visibleHeight, this.getHeaderHeight(),
-            (float)mouseX, (float)mouseY
-         );
-         GlassStyle.sheen(poseStack, this.x, this.y, this.getWidth(), visibleHeight, this.glassSheen);
-         GlassStyle.title(
+      GuiDrawUtils.fillRect(
+         poseStack,
+         this.x,
+         this.y,
+         this.x
+            + this.getWidth(),
+         this.y
+               + this.getHeaderHeight()
+            + headerVerticalOffset,
+         this.applyHeaderAlpha(uiColor)
+      );
+      FontRenderer.INSTANCE
+         .drawWithShadow(
             poseStack,
-            this.x,
-            this.y,
-            this.getWidth(),
-            this.getHeaderHeight(),
             ClientContext.languageTable.getTranslationOrDefault("ui." + this.name, this.name),
-            this.headerAlphaAnimation.getValue() * 0.5F + 0.5F,
-            this.getHeaderStatus(),
-            this.expanded
-         );
-      } else {
-         GuiDrawUtils.fillRect(
-            poseStack,
-            this.x,
-            this.y,
             this.x
-               + this.getWidth(),
+               + (2),
             this.y
-                  + this.getHeaderHeight()
+               + this.getHeaderHeight()
+                  / 2.0F
+               - FontRenderer.INSTANCE
+                     .getHeight()
+                  / 2.0F
                + headerVerticalOffset,
-            this.applyHeaderAlpha(uiColor)
+            this.applyHeaderAlpha(Color.white)
          );
-         FontRenderer.INSTANCE
-            .drawWithShadow(
-               poseStack,
-               ClientContext.languageTable.getTranslationOrDefault("ui." + this.name, this.name),
-               this.x
-                  + (2),
-               this.y
-                  + this.getHeaderHeight()
-                     / 2.0F
-                  - FontRenderer.INSTANCE
-                        .getHeight()
-                     / 2.0F
-                  + headerVerticalOffset,
-               this.applyHeaderAlpha(Color.white)
-            );
-      }
       if (expansionValue != 0.0F) {
          GuiDrawUtils.flush();
          ScissorStack.push(
@@ -516,21 +424,18 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
          .backgroundSetting
          .getValue();
       if (expansionValue > 0.0F && !this.children.isEmpty()) {
-         if (!glass) {
-            GuiDrawUtils.fillRect(
-               poseStack,
-               this.x,
-               this.y
-                  + this.getHeaderHeight(),
-               this.x
-                  + this.getWidth(),
-               this.y
-                     + this.height
-                  + 0.5F,
-               backgroundColor
-            );
-         }
-
+         GuiDrawUtils.fillRect(
+            poseStack,
+            this.x,
+            this.y
+               + this.getHeaderHeight(),
+            this.x
+               + this.getWidth(),
+            this.y
+                  + this.height
+               + 0.5F,
+            backgroundColor
+         );
          this.children
             .forEach(
                child -> {
@@ -571,34 +476,19 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
          .setTarget(
             this.scrollOffset < 0, 200L
          );
-      if (!glass) {
-         this.renderScrollFade(
-            poseStack,
-            this.bottomScrollFadeAnimation
-               .getValue(),
-            false
-         );
-         this.renderScrollFade(
-            poseStack,
-            this.topScrollFadeAnimation
-               .getValue(),
-            true
-         );
-      }
-
-      if (glass) {
-         GlassStyle.scrollbar(
-            poseStack,
-            this.x,
-            this.y,
-            this.getWidth(),
-            visibleHeight,
-            this.getHeaderHeight(),
-            this.scrollOffset,
-            this.contentHeight
-         );
-         GlassStyle.outline(poseStack, this.x, this.y, this.getWidth(), visibleHeight);
-      } else if (UIModule.INSTANCE.lineSetting.getValue()) {
+      this.renderScrollFade(
+         poseStack,
+         this.bottomScrollFadeAnimation
+            .getValue(),
+         false
+      );
+      this.renderScrollFade(
+         poseStack,
+         this.topScrollFadeAnimation
+            .getValue(),
+         true
+      );
+      if (UIModule.INSTANCE.lineSetting.getValue()) {
          float outlineHeight = (int)(this.height * expansionValue)
             + 0.5F;
          if (outlineHeight
@@ -621,7 +511,6 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
       poseStack.popPose();
       this.recoverScrollOffset();
       this.updateLayout();
-      poseStack.popPose();
       GuiDrawUtils.flush();
    }
 
@@ -656,10 +545,6 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
          this.setExpanded(
             !this.expanded
          );
-         GlassStyle.play(
-            this.expanded ? BuiltinSound.EXPAND : BuiltinSound.COLLAPSE,
-            0.9F
-         );
       }
 
       if (this.expanded) {
@@ -688,12 +573,8 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
       if (this.expanded) {
          if (this.isMouseOver(mouseX, mouseY)
             && !this.heightLimitDisabled) {
-            int previousOffset = this.scrollOffset;
             this.scrollOffset = this.scrollOffset
                + (int)(scrollAmount * 20.0D);
-            if (this.scrollOffset != previousOffset) {
-               GlassStyle.play(BuiltinSound.SCROLL_TICK, 0.45F);
-            }
          }
 
          for (GuiElement child : this.children) {

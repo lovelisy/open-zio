@@ -49,23 +49,6 @@ public class ModuleCategoryPanel extends Panel implements ClientAccess {
    }
 
    @Override
-   protected String getHeaderStatus() {
-      int enabled = 0;
-      int total = 0;
-
-      for (GuiElement child : this.children) {
-         if (child instanceof ModuleComponent component) {
-            total++;
-            if (component.getModule().isToggled()) {
-               enabled++;
-            }
-         }
-      }
-
-      return total == 0 ? null : enabled + "/" + total;
-   }
-
-   @Override
    protected boolean isChildVisible(GuiElement child) {
       EditBox searchBox = ClientContext.getClickGui()
          .getSearchBox();

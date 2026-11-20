@@ -9,12 +9,10 @@
 
 package dev.zio.client.gui.components;
 
-import dev.zio.client.audio.BuiltinSound;
 import dev.zio.client.render.FontRenderer;
 import dev.zio.client.render.GuiDrawUtils;
 import dev.zio.client.utils.ClampedInterpolatedFloat;
 import dev.zio.client.gui.CloseState;
-import dev.zio.client.gui.GlassStyle;
 import dev.zio.client.gui.panels.Panel;
 import dev.zio.client.modules.client.UIModule;
 import dev.zio.client.settings.BooleanSetting;
@@ -47,43 +45,31 @@ public class BooleanSettingComponent extends SettingComponent<Boolean> {
          .updateAndGet();
       super.render(poseStack, mouseX, mouseY);
       if ((this.setting.getValue() || enabledProgress > 0.01D) && !this.setting.groupOnly) {
-         if (GlassStyle.isActive()) {
-            GlassStyle.settingRow(
-               poseStack,
-               this.panel.getX(),
-               this.panel.getY() + this.yOffset,
-               this.panel.getWidth(),
-               this.getHeight(),
-               enabledProgress,
-               this.getHoverAnimationValue()
-            );
-         } else {
-            GuiDrawUtils.fillRect(
-               poseStack,
-               this.panel
-                     .getX()
-                  + this.getHorizontalPadding(),
-               this.panel
-                        .getY()
-                     + this.yOffset
-                  + 0.5F,
-               this.panel
-                     .getX()
-                  + Math.max(
-                     this.panel
-                              .getWidth()
-                           * enabledProgress
-                        - 1.0F,
-                     2.0F
-                  ),
-               this.panel
-                        .getY()
-                     + this.yOffset
-                     + this.getHeight()
-                  - 0.5F,
-               this.getUiModule().colorSetting.getValue()
-            );
-         }
+         GuiDrawUtils.fillRect(
+            poseStack,
+            this.panel
+                  .getX()
+               + this.getHorizontalPadding(),
+            this.panel
+                     .getY()
+                  + this.yOffset
+               + 0.5F,
+            this.panel
+                  .getX()
+               + Math.max(
+                  this.panel
+                           .getWidth()
+                        * enabledProgress
+                     - 1.0F,
+                  2.0F
+               ),
+            this.panel
+                     .getY()
+                  + this.yOffset
+                  + this.getHeight()
+               - 0.5F,
+            this.getUiModule().colorSetting.getValue()
+         );
       }
 
       String settingName = this.getDisplayName();
@@ -103,11 +89,9 @@ public class BooleanSettingComponent extends SettingComponent<Boolean> {
                      + this.getTextYOffset()
                      - this.getHoverAnimationValue()
                      + this.yOffset,
-                  GlassStyle.isActive() && this.setting.getValue()
-                     ? new Color(GlassStyle.highlightText(), true)
-                     : this.getUiModule()
-                        .textColorSetting
-                        .getValue()
+                  this.getUiModule()
+                     .textColorSetting
+                     .getValue()
                )
          );
       }
@@ -176,16 +160,14 @@ public class BooleanSettingComponent extends SettingComponent<Boolean> {
       super.mouseClicked(mouseX, mouseY, button);
       if (this.isMouseOver(mouseX, mouseY)) {
          if (button == 0) {
-            boolean next = !this.setting.getValue();
-            this.setting.setValue(next);
-            if (!this.setting.groupOnly) {
-               GlassStyle.play(next ? BuiltinSound.TOGGLE_ON : BuiltinSound.TOGGLE_OFF, 0.9F);
-            }
+            this.setting
+               .setValue(
+                  !this.setting.getValue()
+               );
          }
 
          if (button == 1 && this.setting.visibilityDependency) {
             this.setting.expanded = !this.setting.expanded;
-            GlassStyle.play(this.setting.expanded ? BuiltinSound.EXPAND : BuiltinSound.COLLAPSE, 0.9F);
          }
       }
    }

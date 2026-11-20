@@ -12,7 +12,6 @@ package dev.zio.client.gui.components;
 import dev.zio.client.render.FontRenderer;
 import dev.zio.client.render.GuiDrawUtils;
 
-import dev.zio.client.gui.GlassStyle;
 import dev.zio.client.gui.components.SettingComponent;
 import dev.zio.client.gui.components.ModuleComponent;
 import dev.zio.client.ClientAccess;
@@ -38,39 +37,27 @@ public class RegistrySetSettingComponent<E> extends SettingComponent<java.util.S
    public void render(PoseStack poseStack, double mouseX, double mouseY) {
       if (!this.isUnavailable()) {
          super.render(poseStack, mouseX, mouseY);
-         if (GlassStyle.isActive()) {
-            GlassStyle.settingRow(
-               poseStack,
-               this.panel.getX(),
-               this.panel.getY() + this.yOffset,
-               this.panel.getWidth(),
-               this.getHeight(),
-               1.0F,
-               this.getHoverAnimationValue()
-            );
-         } else {
-            GuiDrawUtils.fillRect(
-               poseStack,
-               this.panel
-                     .getX()
-                  + this.getHorizontalPadding(),
-               this.panel
-                        .getY()
-                     + this.yOffset
-                  + 0.5F,
-               this.panel
-                     .getX()
-                  + this.panel
-                     .getWidth()
-                  - 1,
-               this.panel
-                        .getY()
-                     + this.yOffset
-                     + this.getHeight()
-                  - 0.5F,
-               this.getUiModule().colorSetting.getValue()
-            );
-         }
+         GuiDrawUtils.fillRect(
+            poseStack,
+            this.panel
+                  .getX()
+               + this.getHorizontalPadding(),
+            this.panel
+                     .getY()
+                  + this.yOffset
+               + 0.5F,
+            this.panel
+                  .getX()
+               + this.panel
+                  .getWidth()
+               - 1,
+            this.panel
+                     .getY()
+                  + this.yOffset
+                  + this.getHeight()
+               - 0.5F,
+            this.getUiModule().colorSetting.getValue()
+         );
          String settingName = this.getDisplayName();
          String selectionCount = "[%d]"
             .formatted((this.setting.getValue()).size());
@@ -87,9 +74,7 @@ public class RegistrySetSettingComponent<E> extends SettingComponent<java.util.S
                      .getX()
                   + 4,
                textY,
-               GlassStyle.isActive()
-                  ? new Color(GlassStyle.highlightText(), true)
-                  : this.getUiModule().textColorSetting.getValue()
+               this.getUiModule().textColorSetting.getValue()
             );
          FontRenderer.INSTANCE
             .drawWithShadow(
@@ -103,9 +88,7 @@ public class RegistrySetSettingComponent<E> extends SettingComponent<java.util.S
                      .getWidth(selectionCount)
                   - 2.5F,
                textY,
-               GlassStyle.isActive()
-                  ? new Color(GlassStyle.highlightText(), true)
-                  : this.getUiModule().textColorSetting.getValue()
+               this.getUiModule().textColorSetting.getValue()
             );
       }
    }

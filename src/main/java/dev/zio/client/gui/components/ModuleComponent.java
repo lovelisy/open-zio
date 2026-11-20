@@ -22,8 +22,6 @@ import dev.zio.client.utils.ClampedInterpolatedFloat;
 import dev.zio.client.gui.components.ColorSettingComponent;
 import dev.zio.client.render.ColorUtils;
 import dev.zio.client.gui.GuiElement;
-import dev.zio.client.gui.GlassStyle;
-import dev.zio.client.audio.BuiltinSound;
 import dev.zio.client.render.FontRenderer;
 import dev.zio.client.gui.components.AbstractComponent;
 import dev.zio.client.gui.ScissorStack;
@@ -63,37 +61,12 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
          * UIModule.INSTANCE.animSpeedSetting.getValue(),
       true
    );
-   private final ClampedInterpolatedFloat expandAnimation = new ClampedInterpolatedFloat(
-      () -> 2.0F
-         * UIModule.INSTANCE.animSpeedSetting.getValue(),
-      true
-   );
    private final FloatAnimation searchHighlightAnimation = new FloatAnimation();
    protected final Module module;
    private int searchHighlightCycle = 0;
    private boolean copyShortcutHovered;
    private boolean requestedOpen;
-   private long pressStartedAt = -1L;
-   private boolean pressPushed;
    public float animatedHeight;
-
-   private Color getEnabledGlassTextColor() {
-      return new Color(GlassStyle.highlightText(), true);
-   }
-
-   private float getPressScale() {
-      if (!GlassStyle.isActive() || this.pressStartedAt <= 0L) {
-         return 1.0F;
-      }
-
-      float progress = (System.currentTimeMillis() - this.pressStartedAt) / 260.0F;
-      if (progress >= 1.0F) {
-         return 1.0F;
-      }
-
-      float squeeze = progress < 0.3F ? 1.0F : 1.0F - (progress - 0.3F) / 0.7F;
-      return 1.0F - 0.035F * squeeze;
-   }
 
    @Override
    public void setYOffset(int yOffset) {
@@ -336,111 +309,70 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
          .updateAndGet();
       float hoverOffset = this.getHoverAnimationValue();
       int baseHeight = this.getBaseHeight();
-      boolean glass = GlassStyle.isActive();
-      this.expandAnimation.setTarget(this.requestedOpen);
-      float expandValue = this.expandAnimation.updateAndGet();
-      this.pressPushed = false;
-      if (glass) {
-         float press = this.getPressScale();
-         if (press < 0.999F) {
-            float rowCenterX = this.panel.getX() + this.panel.getWidth() / 2.0F;
-            float rowCenterY = this.panel.getY() + this.yOffset + baseHeight / 2.0F;
-            poseStack.pushPose();
-            poseStack.translate(rowCenterX, rowCenterY, 0.0F);
-            poseStack.scale(press, press, 1.0F);
-            poseStack.translate(-rowCenterX, -rowCenterY, 0.0F);
-            this.pressPushed = true;
-         } else {
-            this.pressPushed = false;
-         }
-
-         GlassStyle.moduleRow(
+      if (this.module.isToggled()
+         || enabledProgress > 0.01D) {
+         GuiDrawUtils.fillRect(
             poseStack,
-            this.panel.getX(),
-            this.panel.getY() + this.yOffset,
-            this.panel.getWidth(),
-            baseHeight,
-            enabledProgress,
-            this.getHoverAnimationValue()
+            this.panel
+                  .getX()
+               + 1.0F,
+            this.panel
+                     .getY()
+                  + this.yOffset
+               + 0.5F,
+            this.panel
+                  .getX()
+               + (
+                     this.panel
+                           .getWidth()
+                        - 1.0F
+                  )
+                  * enabledProgress,
+            this.panel
+                     .getY()
+                  + this.yOffset
+                  + baseHeight
+               - 0.5F,
+            this.getUiModule().enabledSetting.getValue()
          );
-      } else {
-         if (this.module.isToggled()
-            || enabledProgress > 0.01D) {
-            GuiDrawUtils.fillRect(
-               poseStack,
-               this.panel
-                     .getX()
-                  + 1.0F,
-               this.panel
-                        .getY()
-                     + this.yOffset
-                  + 0.5F,
-               this.panel
-                     .getX()
-                  + (
-                        this.panel
-                              .getWidth()
-                           - 1.0F
-                     )
-                     * enabledProgress,
-               this.panel
-                        .getY()
-                     + this.yOffset
-                     + baseHeight
-                  - 0.5F,
-               this.getUiModule().enabledSetting.getValue()
-            );
-         }
+      }
 
-         if (gradientEnabled) {
-            this.renderButtonBackground(poseStack, 1.0F);
-         } else if (enabledProgress
-            < 1.0F) {
-            this.renderButtonBackground(poseStack, enabledProgress);
-         }
+      if (gradientEnabled) {
+         this.renderButtonBackground(poseStack, 1.0F);
+      } else if (enabledProgress
+         < 1.0F) {
+         this.renderButtonBackground(poseStack, enabledProgress);
       }
 
       if (this.searchHighlightCycle > 0) {
          float highlightProgress = this.searchHighlightAnimation
             .getValue();
-         int highlightColor = ColorUtils.packArgb(
-            1.0F,
-            0.0F,
-            0.0F,
-            highlightProgress
-         );
-         if (glass) {
-            GlassStyle.highlight(
-               poseStack,
-               this.panel.getX(),
-               this.panel.getY() + this.yOffset,
-               this.panel.getWidth(),
-               baseHeight,
-               highlightColor
-            );
-         } else {
-            GuiDrawUtils.fillRect(
-               poseStack,
-               this.panel
-                     .getX()
-                  + 1.0F,
-               this.panel
-                        .getY()
-                     + this.yOffset
-                  + 0.5F,
-               this.panel
+         GuiDrawUtils.fillRect(
+            poseStack,
+            this.panel
+                  .getX()
+               + 1.0F,
+            this.panel
+                     .getY()
+                  + this.yOffset
+               + 0.5F,
+            this.panel
                      .getX()
                   + this.panel
                      .getWidth()
-                  - 1.0F,
-               this.panel
-                        .getY()
-                     + this.yOffset
+               - 1.0F,
+            this.panel
+                     .getY()
+                  + this.yOffset
                   + baseHeight
-                  - 0.5F,
-               highlightColor
-            );
-         }
+               - 0.5F,
+            ColorUtils.packArgb(
+               1.0F,
+               0.0F,
+               0.0F,
+               highlightProgress
+            )
+         );
          if (highlightProgress
                == 1.0F
             || highlightProgress == 0.0F) {
@@ -469,56 +401,38 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
             ClientContext.languageTable.translateModule(this.module.getName()),
             this.panel
                   .getX()
-               + (glass ? 9 : 3),
+               + (3),
             this.panel
                   .getY()
                + this.getTextYOffset()
                - hoverOffset
                + this.yOffset,
-            glass && this.module.isToggled()
-               ? getEnabledGlassTextColor()
-               : (
-                  this.module.isToggled()
-                     ? this.getUiModule()
-                        .enabledColorSetting
-                        .getValue()
-                     : this.getUiModule().textColorSetting.getValue()
-               )
+            this.module.isToggled()
+               ? this.getUiModule()
+                  .enabledColorSetting
+                  .getValue()
+               : this.getUiModule().textColorSetting.getValue()
          );
       if (this.getUiModule().gearSetting.getValue()
          && !this.children.isEmpty()) {
-         if (glass) {
-            GlassStyle.chevron(
+         String expandIndicator = this.requestedOpen ? "-" : "+";
+         FontRenderer.INSTANCE
+            .drawWithShadow(
                poseStack,
-               this.panel.getX() + this.panel.getWidth() - 8.0F,
-               this.panel.getY() + this.yOffset + this.getBaseHeight() / 2.0F,
-               2.4F,
-               90.0F * expandValue,
-               1.0F,
-               this.module.isToggled() ? 0xB3FFFFFF : 0x99A7ADBA
+               expandIndicator,
+               this.panel
+                        .getX()
+                     + this.panel
+                        .getWidth()
+                     - (4)
+                  - FontRenderer.INSTANCE
+                     .getWidth(expandIndicator),
+               this.panel
+                     .getY()
+                  + this.getTextYOffset()
+                  + this.yOffset,
+               this.getUiModule().textColorSetting.getValue()
             );
-         } else {
-            String expandIndicator = this.requestedOpen ? "-" : "+";
-            FontRenderer.INSTANCE
-               .drawWithShadow(
-                  poseStack,
-                  expandIndicator,
-                  this.panel
-                           .getX()
-                        + this.panel
-                           .getWidth()
-                        - (4)
-                     - FontRenderer.INSTANCE
-                        .getWidth(expandIndicator),
-                  this.panel
-                        .getY()
-                     + this.getTextYOffset()
-                     + this.yOffset,
-                  GlassStyle.isActive()
-                     ? new Color(GlassStyle.highlightText(), true)
-                     : this.getUiModule().textColorSetting.getValue()
-               );
-         }
       }
 
       MutableComponent statusText = Component.empty();
@@ -554,7 +468,7 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
                      .getWidth(
                         ClientContext.languageTable.translateModule(this.module.getName())
                      )
-                  + (glass ? 9.0F : 3.0F),
+                  + 3.0F,
                this.panel
                      .getY()
                   + this.getTextYOffset()
@@ -562,9 +476,7 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
                   + this.yOffset
                   + statusYOffset,
                statusScale,
-               glass && this.module.isToggled()
-                  ? Color.WHITE
-                  : this.getUiModule().textColorSetting.getValue()
+               this.getUiModule().textColorSetting.getValue()
             );
       }
 
@@ -594,10 +506,6 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
       }
 
       poseStack.popPose();
-      if (this.pressPushed) {
-         poseStack.popPose();
-         this.pressPushed = false;
-      }
       if (this.getUiModule().descriptionsSetting.getValue()
          && this.isMouseOver(mouseX, mouseY)) {
          ClientContext.getClickGui()
@@ -615,10 +523,6 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
    @Override
    public void mouseClicked(double mouseX, double mouseY, int button) {
       super.mouseClicked(mouseX, mouseY, button);
-      if (this.isMouseOver(mouseX, mouseY) && GlassStyle.isActive()) {
-         this.pressStartedAt = System.currentTimeMillis();
-      }
-
       if (this.isMouseOver(mouseX, mouseY)
          && !ClientContext.getClickGui()
             .getSearchBox()
@@ -630,21 +534,12 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
       if (this.isMouseOver(mouseX, mouseY)
          && button == 0
          && this.isLeftClickEligible()) {
-         boolean toggled = this.module.isToggled();
          this.module
             .toggle();
-         GlassStyle.play(
-            toggled ? BuiltinSound.TOGGLE_OFF : BuiltinSound.TOGGLE_ON,
-            0.9F
-         );
       }
 
       if (this.isMouseOver(mouseX, mouseY) && button == 1) {
          this.toggleOpen();
-         GlassStyle.play(
-            this.requestedOpen ? BuiltinSound.EXPAND : BuiltinSound.COLLAPSE,
-            0.9F
-         );
       }
 
       this.children

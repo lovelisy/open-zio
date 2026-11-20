@@ -11,7 +11,6 @@ package dev.zio.client.gui.components;
 
 import dev.zio.client.render.FontRenderer;
 
-import dev.zio.client.gui.GlassStyle;
 import dev.zio.client.gui.components.AbstractComponent;
 import dev.zio.client.gui.components.ColorSettingComponent;
 
@@ -56,9 +55,7 @@ public abstract class ColorActionButton extends AbstractComponent {
                + 0.0F
                + this.getTextYOffset()
                - this.getHoverAnimationValue(),
-            GlassStyle.isActive()
-               ? new Color(GlassStyle.highlightText(), true)
-               : this.getUiModule().textColorSetting.getValue()
+            this.getUiModule().textColorSetting.getValue()
          );
    }
 

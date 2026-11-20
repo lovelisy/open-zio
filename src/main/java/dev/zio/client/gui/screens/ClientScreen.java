@@ -17,8 +17,6 @@ import dev.zio.client.render.GuiDrawUtils;
 import dev.zio.client.utils.InterpolatedFloat;
 import dev.zio.client.render.MaskShaderRenderer;
 import dev.zio.client.gui.CursorType;
-import dev.zio.client.gui.GlassStyle;
-import dev.zio.client.audio.BuiltinSound;
 import dev.zio.client.utils.world.Season;
 import dev.zio.client.render.RenderUtils;
 import dev.zio.client.render.ColorUtils;
@@ -91,7 +89,6 @@ public class ClientScreen extends Screen implements ClientAccess {
    private Screen parentScreen;
    protected boolean escapeCloseAllowed;
    private boolean skipOpeningTransition;
-   private boolean openSoundPlayed;
 
    public Screen getParentScreen() {
       return this.parentScreen;
@@ -123,7 +120,7 @@ public class ClientScreen extends Screen implements ClientAccess {
 
    public float getTransitionOpacity() {
       float opacity = (float)(System.currentTimeMillis() - this.transitionStartedAt)
-         / this.getTransitionDuration();
+         / TRANSITION_DURATION_MILLIS;
       if (this.closing) {
          opacity = 1.0F
             - opacity;
@@ -134,14 +131,6 @@ public class ClientScreen extends Screen implements ClientAccess {
          0.0F,
          1.0F
       );
-   }
-
-   public long getTransitionStartedAt() {
-      return this.transitionStartedAt;
-   }
-
-   public long getTransitionDuration() {
-      return GlassStyle.isActive() ? 340L : TRANSITION_DURATION_MILLIS;
    }
 
    public void setPanelDragging(boolean dragging) {
@@ -186,7 +175,7 @@ public class ClientScreen extends Screen implements ClientAccess {
    @Override
    public void tick() {
       if (this.closing
-         && System.currentTimeMillis() - this.transitionStartedAt >= this.getTransitionDuration()) {
+         && System.currentTimeMillis() - this.transitionStartedAt >= TRANSITION_DURATION_MILLIS) {
          for (Panel panel : this.panels) {
             panel.setDragging(false);
          }
@@ -356,22 +345,11 @@ public class ClientScreen extends Screen implements ClientAccess {
          panel.init();
       }
 
-      float centerX = screenWidth / 2.0F;
-      ArrayList<Panel> ordered = new ArrayList<>(this.panels);
-      ordered.sort(Comparator.comparingDouble(panel -> Math.abs(panel.getX() + panel.getWidth() / 2.0F - centerX)));
-      for (int index = 0; index < ordered.size(); index++) {
-         ordered.get(index).setGlassRank(index, ordered.size());
-      }
-
       if (this.skipOpeningTransition) {
-         this.transitionStartedAt = -this.getTransitionDuration();
+         this.transitionStartedAt = -TRANSITION_DURATION_MILLIS;
          this.skipOpeningTransition = false;
       } else {
          this.transitionStartedAt = System.currentTimeMillis();
-         if (!this.openSoundPlayed) {
-            this.openSoundPlayed = true;
-            GlassStyle.play(BuiltinSound.OPEN, 1.0F);
-         }
       }
    }
 
@@ -444,7 +422,7 @@ public class ClientScreen extends Screen implements ClientAccess {
       hoverY /= scale;
       this.tooltipText = "";
       this.renderBackgroundOverlay(poseStack);
-      if (UI.aeroSetting.getValue() && !GlassStyle.isActive()) {
+      if (UI.aeroSetting.getValue()) {
          this.renderAeroPanels(poseStack);
       }
 
@@ -455,19 +433,6 @@ public class ClientScreen extends Screen implements ClientAccess {
          GuiDrawUtils.flush();
          MaskShaderRenderer.renderBlur(
             () -> {
-               if (GlassStyle.isActive()) {
-                  GuiDrawUtils.fillRect(
-                     poseStack,
-                     0.0F,
-                     0.0F,
-                     GuiScaleUtils.getScaledWidth(),
-                     GuiScaleUtils.getScaledHeight(),
-                     -1
-                  );
-                  GuiDrawUtils.flush();
-                  return;
-               }
-
                for (Panel blurPanel : this.getPanels()) {
                   float expansion = blurPanel.getExpansionValue();
                   float expandedContentHeight = (
@@ -475,14 +440,15 @@ public class ClientScreen extends Screen implements ClientAccess {
                            - blurPanel.getHeaderHeight()
                      )
                      * expansion;
-                  float blurHeight = blurPanel.getHeaderHeight() + expandedContentHeight;
                   GuiDrawUtils.fillRect(
                      poseStack,
                      blurPanel.getX(),
                      blurPanel.getY(),
                      blurPanel.getX()
                         + blurPanel.getWidth(),
-                     blurPanel.getY() + blurHeight,
+                     blurPanel.getY()
+                           + blurPanel.getHeaderHeight()
+                        + expandedContentHeight,
                      -1
                   );
                }
@@ -632,8 +598,6 @@ public class ClientScreen extends Screen implements ClientAccess {
       if (!this.closing) {
          this.panelDragging = false;
          this.transitionStartedAt = System.currentTimeMillis();
-         this.openSoundPlayed = false;
-         GlassStyle.play(BuiltinSound.CLOSE, 1.0F);
          if (UIModule.INSTANCE.isToggled()) {
             UIModule.INSTANCE
                .toggle();
@@ -643,20 +607,6 @@ public class ClientScreen extends Screen implements ClientAccess {
       }
 
       this.closing = true;
-   }
-
-   public static final int GLASS_SEARCH_BOTTOM = 34;
-
-   public void liftPanelsBelowGlassSearchBar() {
-      if (!GlassStyle.isActive()) {
-         return;
-      }
-
-      for (Panel panel : this.panels) {
-         if (panel.getY() < GLASS_SEARCH_BOTTOM) {
-            panel.setY(GLASS_SEARCH_BOTTOM);
-         }
-      }
    }
 
    public void resetPanelPositions() {
@@ -670,13 +620,12 @@ public class ClientScreen extends Screen implements ClientAccess {
             )
          );
       int panelX = PANEL_START_X;
-      int panelY = GlassStyle.isActive() ? GLASS_SEARCH_BOTTOM : PANEL_START_Y;
 
       for (Panel panel : this.panels) {
          panel.setX(
             panelX
          );
-         panel.setY(panelY);
+         panel.setY(PANEL_START_Y);
          panelX += panel.getWidth()
             + PANEL_GAP;
       }
