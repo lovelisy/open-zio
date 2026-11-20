@@ -17,11 +17,13 @@ import dev.zio.client.render.GuiDrawUtils;
 import dev.zio.client.utils.InterpolatedFloat;
 import dev.zio.client.render.MaskShaderRenderer;
 import dev.zio.client.gui.CursorType;
+import dev.zio.client.gui.GlassStyle;
 import dev.zio.client.utils.world.Season;
 import dev.zio.client.render.RenderUtils;
 import dev.zio.client.render.ColorUtils;
 import dev.zio.client.render.FontRenderer;
 import dev.zio.client.render.GuiProjectionUtils;
+import dev.zio.client.render.GuiShapes;
 import dev.zio.client.gui.ScissorStack;
 import dev.zio.client.render.GuiScaleUtils;
 import dev.zio.client.modules.client.UIModule;
@@ -422,7 +424,7 @@ public class ClientScreen extends Screen implements ClientAccess {
       hoverY /= scale;
       this.tooltipText = "";
       this.renderBackgroundOverlay(poseStack);
-      if (UI.aeroSetting.getValue()) {
+      if (UI.aeroSetting.getValue() && !GlassStyle.isActive()) {
          this.renderAeroPanels(poseStack);
       }
 
@@ -440,17 +442,28 @@ public class ClientScreen extends Screen implements ClientAccess {
                            - blurPanel.getHeaderHeight()
                      )
                      * expansion;
-                  GuiDrawUtils.fillRect(
-                     poseStack,
-                     blurPanel.getX(),
-                     blurPanel.getY(),
-                     blurPanel.getX()
-                        + blurPanel.getWidth(),
-                     blurPanel.getY()
-                           + blurPanel.getHeaderHeight()
-                        + expandedContentHeight,
-                     -1
-                  );
+                  float blurHeight = blurPanel.getHeaderHeight() + expandedContentHeight;
+                  if (GlassStyle.isActive()) {
+                     GuiShapes.fill(
+                        poseStack,
+                        blurPanel.getX(),
+                        blurPanel.getY(),
+                        blurPanel.getWidth(),
+                        blurHeight,
+                        GlassStyle.RADIUS,
+                        -1
+                     );
+                  } else {
+                     GuiDrawUtils.fillRect(
+                        poseStack,
+                        blurPanel.getX(),
+                        blurPanel.getY(),
+                        blurPanel.getX()
+                           + blurPanel.getWidth(),
+                        blurPanel.getY() + blurHeight,
+                        -1
+                     );
+                  }
                }
 
                GuiDrawUtils.flush();

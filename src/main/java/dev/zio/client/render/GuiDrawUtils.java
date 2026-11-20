@@ -290,6 +290,32 @@ public final class GuiDrawUtils implements ClientAccess {
       }
    }
 
+   public static void fillQuad(
+      PoseStack poseStack,
+      float x0,
+      float y0,
+      float x1,
+      float y1,
+      float x2,
+      float y2,
+      float x3,
+      float y3,
+      int color0,
+      int color1,
+      int color2,
+      int color3
+   ) {
+      if (ARGB.alpha(color0) == 0 && ARGB.alpha(color1) == 0 && ARGB.alpha(color2) == 0 && ARGB.alpha(color3) == 0) {
+         return;
+      }
+
+      Matrix4f matrix = poseStack.last().pose();
+      quadBuffer.addVertex(matrix, x0, y0, 0.0F).setColor(color0);
+      quadBuffer.addVertex(matrix, x1, y1, 0.0F).setColor(color1);
+      quadBuffer.addVertex(matrix, x2, y2, 0.0F).setColor(color2);
+      quadBuffer.addVertex(matrix, x3, y3, 0.0F).setColor(color3);
+   }
+
    public static void fillVerticalGradient(
       PoseStack poseStack, float x, float y, float width, float height, int topColor, int bottomColor
    ) {

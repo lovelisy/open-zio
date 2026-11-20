@@ -14,6 +14,7 @@ import dev.zio.client.render.FontRenderer;
 import dev.zio.client.render.GuiDrawUtils;
 
 import dev.zio.client.gui.CloseState;
+import dev.zio.client.gui.GlassStyle;
 import dev.zio.client.gui.components.SettingComponent;
 import dev.zio.client.utils.ElapsedTimer;
 import dev.zio.client.ClientAccess;
@@ -155,27 +156,39 @@ public class StringSettingComponent extends SettingComponent<String> {
          ClientScreen.cursor = CursorType.INPUT;
       }
 
-      GuiDrawUtils.fillRect(
-         poseStack,
-         this.panel
-               .getX()
-            + this.getHorizontalPadding(),
-         this.panel
-                  .getY()
-               + this.yOffset
-            + 0.5F,
-         this.panel
-               .getX()
-            + this.panel
-               .getWidth()
-            - 1,
-         this.panel
-                  .getY()
-               + this.yOffset
-               + this.getHeight()
-            - 0.5F,
-         this.getUiModule().colorSetting.getValue()
-      );
+      if (GlassStyle.isActive()) {
+         GlassStyle.settingRow(
+            poseStack,
+            this.panel.getX(),
+            this.panel.getY() + this.yOffset,
+            this.panel.getWidth(),
+            this.getHeight(),
+            1.0F,
+            this.getHoverAnimationValue()
+         );
+      } else {
+         GuiDrawUtils.fillRect(
+            poseStack,
+            this.panel
+                  .getX()
+               + this.getHorizontalPadding(),
+            this.panel
+                     .getY()
+                  + this.yOffset
+               + 0.5F,
+            this.panel
+                  .getX()
+               + this.panel
+                  .getWidth()
+               - 1,
+            this.panel
+                     .getY()
+                  + this.yOffset
+                  + this.getHeight()
+               - 0.5F,
+            this.getUiModule().colorSetting.getValue()
+         );
+      }
       if (this.editingText != null) {
          this.cursorIndex = Mth.clamp(
             this.cursorIndex,

@@ -19,6 +19,7 @@ import dev.zio.client.render.FontRenderer;
 import java.util.regex.Matcher;
 import dev.zio.client.utils.InterpolatedFloat;
 import dev.zio.client.gui.CloseState;
+import dev.zio.client.gui.GlassStyle;
 import dev.zio.client.gui.components.SettingComponent;
 import dev.zio.client.gui.panels.Panel;
 import dev.zio.client.modules.client.UIModule;
@@ -143,27 +144,38 @@ public class EnumSettingComponent<E extends Enum<E> & NamedEntry> extends Settin
                + this.componentYOffset
                + this.getBaseHeight()
             - 0.5F;
-         GuiDrawUtils.fillRect(
-            poseStack,
-            this.panel
-                  .getX()
-               + this.getHorizontalPadding()
-               + 1,
-            Math.max(selectionOffset + firstRowY, firstRowY),
-            this.panel
-                  .getX()
-               + this.panel
-                  .getWidth()
-               - (2),
-            this.panel
-                     .getY()
-                  + this.componentYOffset
-                  + this.getBaseHeight()
-                     * (2)
-               + selectionOffset
-               - 0.5F,
-            this.getUiModule().colorSetting.getValue()
-         );
+         float selectionY = Math.max(selectionOffset + firstRowY, firstRowY);
+         if (GlassStyle.isActive()) {
+            GlassStyle.enumSelection(
+               poseStack,
+               this.panel.getX(),
+               selectionY,
+               this.panel.getWidth(),
+               this.getBaseHeight()
+            );
+         } else {
+            GuiDrawUtils.fillRect(
+               poseStack,
+               this.panel
+                     .getX()
+                  + this.getHorizontalPadding()
+                  + 1,
+               selectionY,
+               this.panel
+                     .getX()
+                  + this.panel
+                     .getWidth()
+                  - (2),
+               this.panel
+                        .getY()
+                     + this.componentYOffset
+                     + this.getBaseHeight()
+                        * (2)
+                  + selectionOffset
+                  - 0.5F,
+               this.getUiModule().colorSetting.getValue()
+            );
+         }
       } else {
          this.selectionOffsetAnimation
             .setTarget(
@@ -180,28 +192,40 @@ public class EnumSettingComponent<E extends Enum<E> & NamedEntry> extends Settin
             - 1.0F,
          2.0F
       );
-      GuiDrawUtils.fillRect(
-         poseStack,
-         this.panel
-               .getX()
-            + this.getHorizontalPadding()
-            + edgeInset,
-         this.panel
-                  .getY()
-               + this.componentYOffset
-            + 0.5F
-            + edgeInset,
-         this.panel
-               .getX()
-            + fillWidth
-            - edgeInset,
-         this.panel
-                  .getY()
-               + this.componentYOffset
-               + this.getBaseHeight()
-            - 0.5F,
-         this.getUiModule().colorSetting.getValue()
-      );
+      if (GlassStyle.isActive()) {
+         GlassStyle.settingRow(
+            poseStack,
+            this.panel.getX(),
+            this.panel.getY() + this.componentYOffset,
+            this.panel.getWidth(),
+            this.getBaseHeight(),
+            this.fillAnimation.getValue(),
+            this.getHoverAnimationValue()
+         );
+      } else {
+         GuiDrawUtils.fillRect(
+            poseStack,
+            this.panel
+                  .getX()
+               + this.getHorizontalPadding()
+               + edgeInset,
+            this.panel
+                     .getY()
+                  + this.componentYOffset
+               + 0.5F
+               + edgeInset,
+            this.panel
+                  .getX()
+               + fillWidth
+               - edgeInset,
+            this.panel
+                     .getY()
+                  + this.componentYOffset
+                  + this.getBaseHeight()
+               - 0.5F,
+            this.getUiModule().colorSetting.getValue()
+         );
+      }
       if (this.expanded) {
          this.optionRows
             .forEach(row -> row.render(poseStack, mouseX, mouseY));

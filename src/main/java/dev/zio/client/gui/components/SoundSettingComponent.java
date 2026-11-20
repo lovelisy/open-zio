@@ -15,6 +15,7 @@ import dev.zio.client.render.GuiDrawUtils;
 import dev.zio.client.utils.collections.NamedIdentifier;
 import java.util.regex.Matcher;
 import dev.zio.client.gui.CloseState;
+import dev.zio.client.gui.GlassStyle;
 import dev.zio.client.gui.panels.Panel;
 import dev.zio.client.gui.screens.ClientScreen;
 import dev.zio.client.gui.screens.SoundSelectionScreen;
@@ -37,27 +38,39 @@ public class SoundSettingComponent extends SettingComponent<NamedIdentifier> {
             ClientScreen.cursor = CursorType.POINTER;
          }
 
-         GuiDrawUtils.fillRect(
-            poseStack,
-            this.panel
-                  .getX()
-               + this.getHorizontalPadding(),
-            this.panel
-                     .getY()
-                  + this.yOffset
-               + 0.5F,
-            this.panel
-                  .getX()
-               + this.panel
-                  .getWidth()
-               - 1,
-            this.panel
-                     .getY()
-                  + this.yOffset
-                  + this.getHeight()
-               - 0.5F,
-            this.getUiModule().colorSetting.getValue()
-         );
+         if (GlassStyle.isActive()) {
+            GlassStyle.settingRow(
+               poseStack,
+               this.panel.getX(),
+               this.panel.getY() + this.yOffset,
+               this.panel.getWidth(),
+               this.getHeight(),
+               1.0F,
+               this.getHoverAnimationValue()
+            );
+         } else {
+            GuiDrawUtils.fillRect(
+               poseStack,
+               this.panel
+                     .getX()
+                  + this.getHorizontalPadding(),
+               this.panel
+                        .getY()
+                     + this.yOffset
+                  + 0.5F,
+               this.panel
+                     .getX()
+                  + this.panel
+                     .getWidth()
+                  - 1,
+               this.panel
+                        .getY()
+                     + this.yOffset
+                     + this.getHeight()
+                  - 0.5F,
+               this.getUiModule().colorSetting.getValue()
+            );
+         }
          String settingName = this.getDisplayName();
          String soundName = (this.setting.getValue()).getName();
 

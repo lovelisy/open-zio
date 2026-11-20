@@ -19,6 +19,7 @@ import dev.zio.client.utils.ClampedInterpolatedFloat;
 import dev.zio.client.utils.inventory.RegistryContainer;
 import dev.zio.client.render.ColorUtils;
 import dev.zio.client.gui.GuiElement;
+import dev.zio.client.gui.GlassStyle;
 import dev.zio.client.render.FontRenderer;
 import dev.zio.client.gui.ScissorStack;
 import dev.zio.client.render.GuiScaleUtils;
@@ -249,10 +250,18 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
    }
 
    public int getHeaderHeight() {
+      if (GlassStyle.isActive()) {
+         return GlassStyle.HEADER_HEIGHT;
+      }
+
       return this.getUiModule().styleSetting.getValue()
             == UIModule.StyleChoice.SLIM
          ? (int)(12L)
          : (int)(14L);
+   }
+
+   protected String getHeaderStatus() {
+      return null;
    }
 
    @Override
@@ -381,32 +390,49 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
       float headerVerticalOffset = this.getUiModule().lineSetting.getValue()
          ? 0.0F
          : 0.5F;
-      GuiDrawUtils.fillRect(
-         poseStack,
-         this.x,
-         this.y,
-         this.x
-            + this.getWidth(),
-         this.y
-               + this.getHeaderHeight()
-            + headerVerticalOffset,
-         this.applyHeaderAlpha(uiColor)
-      );
-      FontRenderer.INSTANCE
-         .drawWithShadow(
+      boolean glass = GlassStyle.isActive();
+      float visibleHeight = Math.max(this.getHeaderHeight(), this.height * expansionValue);
+      if (glass) {
+         GlassStyle.panel(poseStack, this.x, this.y, this.getWidth(), visibleHeight, this.getHeaderHeight());
+         GlassStyle.title(
             poseStack,
+            this.x,
+            this.y,
+            this.getWidth(),
+            this.getHeaderHeight(),
             ClientContext.languageTable.getTranslationOrDefault("ui." + this.name, this.name),
-            this.x
-               + (2),
-            this.y
-               + this.getHeaderHeight()
-                  / 2.0F
-               - FontRenderer.INSTANCE
-                     .getHeight()
-                  / 2.0F
-               + headerVerticalOffset,
-            this.applyHeaderAlpha(Color.white)
+            this.headerAlphaAnimation.getValue() * 0.5F + 0.5F,
+            this.getHeaderStatus(),
+            this.expanded
          );
+      } else {
+         GuiDrawUtils.fillRect(
+            poseStack,
+            this.x,
+            this.y,
+            this.x
+               + this.getWidth(),
+            this.y
+                  + this.getHeaderHeight()
+               + headerVerticalOffset,
+            this.applyHeaderAlpha(uiColor)
+         );
+         FontRenderer.INSTANCE
+            .drawWithShadow(
+               poseStack,
+               ClientContext.languageTable.getTranslationOrDefault("ui." + this.name, this.name),
+               this.x
+                  + (2),
+               this.y
+                  + this.getHeaderHeight()
+                     / 2.0F
+                  - FontRenderer.INSTANCE
+                        .getHeight()
+                     / 2.0F
+                  + headerVerticalOffset,
+               this.applyHeaderAlpha(Color.white)
+            );
+      }
       if (expansionValue != 0.0F) {
          GuiDrawUtils.flush();
          ScissorStack.push(
@@ -424,18 +450,21 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
          .backgroundSetting
          .getValue();
       if (expansionValue > 0.0F && !this.children.isEmpty()) {
-         GuiDrawUtils.fillRect(
-            poseStack,
-            this.x,
-            this.y
-               + this.getHeaderHeight(),
-            this.x
-               + this.getWidth(),
-            this.y
-                  + this.height
-               + 0.5F,
-            backgroundColor
-         );
+         if (!glass) {
+            GuiDrawUtils.fillRect(
+               poseStack,
+               this.x,
+               this.y
+                  + this.getHeaderHeight(),
+               this.x
+                  + this.getWidth(),
+               this.y
+                     + this.height
+                  + 0.5F,
+               backgroundColor
+            );
+         }
+
          this.children
             .forEach(
                child -> {
@@ -476,19 +505,34 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
          .setTarget(
             this.scrollOffset < 0, 200L
          );
-      this.renderScrollFade(
-         poseStack,
-         this.bottomScrollFadeAnimation
-            .getValue(),
-         false
-      );
-      this.renderScrollFade(
-         poseStack,
-         this.topScrollFadeAnimation
-            .getValue(),
-         true
-      );
-      if (UIModule.INSTANCE.lineSetting.getValue()) {
+      if (!glass) {
+         this.renderScrollFade(
+            poseStack,
+            this.bottomScrollFadeAnimation
+               .getValue(),
+            false
+         );
+         this.renderScrollFade(
+            poseStack,
+            this.topScrollFadeAnimation
+               .getValue(),
+            true
+         );
+      }
+
+      if (glass) {
+         GlassStyle.scrollbar(
+            poseStack,
+            this.x,
+            this.y,
+            this.getWidth(),
+            visibleHeight,
+            this.getHeaderHeight(),
+            this.scrollOffset,
+            this.contentHeight
+         );
+         GlassStyle.outline(poseStack, this.x, this.y, this.getWidth(), visibleHeight);
+      } else if (UIModule.INSTANCE.lineSetting.getValue()) {
          float outlineHeight = (int)(this.height * expansionValue)
             + 0.5F;
          if (outlineHeight

@@ -58,6 +58,7 @@ public final class UIModule extends Module {
    private final AtomicBoolean panelResetPending = new AtomicBoolean(false);
    private final Setting<Boolean> resetSetting;
    public final Setting<StyleChoice> styleSetting;
+   public final Setting<GuiStyle> guiStyleSetting;
    public final Setting<Float> animSpeedSetting;
    public final Setting<Float> scaleSetting;
    public final Setting<Boolean> snowSetting;
@@ -196,6 +197,7 @@ public final class UIModule extends Module {
       super("UI", "Displays the client's click gui.", ModuleCategory.CLIENT, new String[0]);
       this.resetSetting = this.add(new BooleanSetting(("Reset"), true));
       this.styleSetting = this.add(new EnumSetting<>(("Style"), UIModule.StyleChoice.PLAIN));
+      this.guiStyleSetting = this.add(new EnumSetting<>(("Design"), UIModule.GuiStyle.VANILLA));
       this.animSpeedSetting = this.add(new NumberSetting<>("AnimSpeed", 1.0F, 0.5F, 2.5F));
       this.scaleSetting = this.add(new NumberSetting<>("Scale", 1.0F, 0.1F, 2.0F));
       this.snowSetting = this.add(new BooleanSetting("Snow", true));
@@ -371,6 +373,22 @@ public final class UIModule extends Module {
       LanguageChoice(String displayName, String languageCode) {
          this.displayName = displayName;
          this.languageCode = languageCode;
+      }
+   }
+
+   public enum GuiStyle implements NamedEntry {
+      VANILLA("Vanilla"),
+      GLASS("Glass");
+
+      private final String displayName;
+
+      @Override
+      public String getName() {
+         return this.displayName;
+      }
+
+      GuiStyle(String displayName) {
+         this.displayName = displayName;
       }
    }
 

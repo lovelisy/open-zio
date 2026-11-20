@@ -11,6 +11,7 @@ package dev.zio.client.gui.components;
 
 import dev.zio.client.utils.InterpolatedFloat;
 import dev.zio.client.gui.CloseState;
+import dev.zio.client.gui.GlassStyle;
 import dev.zio.client.render.GuiDrawUtils;
 import dev.zio.client.gui.CursorType;
 import dev.zio.client.utils.ElapsedTimer;
@@ -177,29 +178,40 @@ public class NumericSettingComponent<N extends Number> extends SettingComponent<
          ClientScreen.cursor = CursorType.INPUT;
       }
 
-      GuiDrawUtils.fillRect(
-         poseStack,
-         this.sliderX
-            + this.getHorizontalPadding(),
-         this.sliderY
-            + 0.5F,
-         (int)(
+      if (GlassStyle.isActive()) {
+         GlassStyle.settingProgress(
+            poseStack,
+            this.panel.getX(),
+            this.panel.getY() + this.yOffset,
+            this.panel.getWidth(),
+            this.getHeight(),
+            this.sliderFillAnimation.updateAndGet() / Math.max(1.0F, this.panel.getWidth() - 3.0F)
+         );
+      } else {
+         GuiDrawUtils.fillRect(
+            poseStack,
             this.sliderX
-               + Mth.clamp(
-                  this.sliderFillAnimation
-                     .updateAndGet(),
-                  0.0F,
-                  this.panel
-                        .getWidth()
-                     - (3)
-               )
-               + 2.0F
-         ),
-         this.sliderY
-               + this.getHeight()
-            - 0.5F,
-         this.getUiModule().colorSetting.getValue()
-      );
+               + this.getHorizontalPadding(),
+            this.sliderY
+               + 0.5F,
+            (int)(
+               this.sliderX
+                  + Mth.clamp(
+                     this.sliderFillAnimation
+                        .updateAndGet(),
+                     0.0F,
+                     this.panel
+                           .getWidth()
+                        - (3)
+                  )
+                  + 2.0F
+            ),
+            this.sliderY
+                  + this.getHeight()
+               - 0.5F,
+            this.getUiModule().colorSetting.getValue()
+         );
+      }
       String unitText = this.numberSetting.getUnit();
       String valueText = ((NUMBER_FORMAT.format((this.setting.getValue()).doubleValue())) + "\u0001")
          .replaceFirst("\u0001", Matcher.quoteReplacement(String.valueOf(unitText)));
