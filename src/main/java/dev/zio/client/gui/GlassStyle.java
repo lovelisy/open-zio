@@ -279,6 +279,41 @@ public final class GlassStyle {
       segment(poses, iconCenterX + 1.2F, iconCenterY + 1.8F, iconCenterX + 3.8F, iconCenterY + 4.2F, 1.0F, iconColor);
    }
 
+   public static void sheen(
+      PoseStack poses, float x, float y, float w, float h, float progress
+   ) {
+      if (progress <= 0.0F || progress >= 1.0F || w <= 0.0F || h <= 0.0F) {
+         return;
+      }
+
+      float span = w + h * 0.6F;
+      float bandWidth = Math.max(10.0F, span * 0.18F);
+      float position = -span * 0.5F - bandWidth + (span + bandWidth * 2.0F) * progress;
+      float left = x + span * 0.5F + position;
+      float right = left + bandWidth;
+      if (right <= x || left >= x + w) {
+         return;
+      }
+
+      int fade = (int)(0x1E * (1.0F - Math.abs(progress - 0.5F) * 2.0F)) << 24;
+      if ((fade >>> 24) <= 0) {
+         return;
+      }
+
+      float top = y + 1.0F;
+      float bottom = y + h - 1.0F;
+      int clear = 0x00FFFFFF;
+      int soft = fade | 0xFFFFFF;
+      GuiDrawUtils.fillQuad(
+         poses, left, top, left + bandWidth * 0.45F, top, left + bandWidth * 0.45F, bottom, left, bottom,
+         clear, soft, soft, clear
+      );
+      GuiDrawUtils.fillQuad(
+         poses, left + bandWidth * 0.45F, top, right, top, right, bottom, left + bandWidth * 0.45F, bottom,
+         soft, clear, clear, soft
+      );
+   }
+
    public static void optionHover(
       PoseStack poses, float x, float y, float w, float h, float progress
    ) {

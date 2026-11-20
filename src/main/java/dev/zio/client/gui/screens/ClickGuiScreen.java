@@ -373,11 +373,12 @@ public class ClickGuiScreen extends ClientScreen implements ClientAccess {
                ClientContext.languageTable.getTranslationOrDefault("ui.Search", "Search modules"),
                x + 21.0F,
                textY,
-               0x99A7ADBA
+               new Color(0xFF9AA0AC, true)
             );
       } else {
          FontRenderer.INSTANCE
-            .drawWithShadow(poseStack, text, x + 21.0F, textY, focused ? 0xFFFFFFFF : 0xFFCFD4DE);
+            .drawWithShadow(poseStack, text, x + 21.0F, textY,
+               new Color(focused ? 0xFFFFFFFF : 0xFFCFD4DE, true));
          float typedWidth = FontRenderer.INSTANCE.getWidth(text);
          String cursor = focused ? this.getSearchCursor() : "";
          FontRenderer.INSTANCE
@@ -386,7 +387,7 @@ public class ClickGuiScreen extends ClientScreen implements ClientAccess {
                completion + cursor,
                x + 21.0F + typedWidth,
                textY,
-               0x88A7ADBA
+               new Color(0x88A7ADBA, true)
             );
       }
 
@@ -408,7 +409,7 @@ public class ClickGuiScreen extends ClientScreen implements ClientAccess {
                count,
                x + width - 14.0F - FontRenderer.INSTANCE.getWidth(count),
                textY,
-               0x88767D8B
+               new Color(0x88767D8B, true)
             );
       } else {
          this.glassSearchQuery = "";
@@ -427,8 +428,8 @@ public class ClickGuiScreen extends ClientScreen implements ClientAccess {
       String normalized = TextUtils.normalizeKeyboardLayout(query);
       int matches = 0;
       for (Panel panel : this.panels) {
-         for (GuiElement child : panel.getChildren()) {
-            if (!(child instanceof ModuleComponent component)) {
+         for (Object childEntry : panel.getChildren()) {
+            if (!(childEntry instanceof ModuleComponent component)) {
                continue;
             }
 
