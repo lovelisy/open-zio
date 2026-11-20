@@ -22,6 +22,8 @@ import dev.zio.client.utils.FloatAnimation;
 import dev.zio.client.utils.ElapsedTimer;
 import dev.zio.client.render.ColorUtils;
 import dev.zio.client.gui.GuiElement;
+import dev.zio.client.gui.CursorType;
+import dev.zio.client.gui.GlassStyle;
 import dev.zio.client.render.FontRenderer;
 import dev.zio.client.gui.components.ModuleComponent;
 import dev.zio.client.managers.ConfigurationManager;
@@ -67,10 +69,18 @@ public class ClickGuiScreen extends ClientScreen implements ClientAccess {
    private boolean gamePanelUnlocked;
    private boolean searchCursorVisible;
    private final FloatAnimation searchFocusAnimation = new FloatAnimation();
+   private final FloatAnimation glassSearchGlow = new FloatAnimation();
    private final ElapsedTimer searchCursorTimer = new ElapsedTimer();
    public EditBox searchBox;
    private String searchCompletion;
    public List openModuleComponents = new ArrayList();
+   private float glassSearchX;
+   private float glassSearchY;
+   private float glassSearchWidth;
+   private float glassSearchHeight;
+   private boolean glassSearchCountDirty = true;
+   private int glassSearchMatchCount;
+   private String glassSearchQuery = "";
 
    private void handleSecretSequence(int keyCode) {
       if (!this.gamePanelUnlocked
@@ -245,6 +255,7 @@ public class ClickGuiScreen extends ClientScreen implements ClientAccess {
       this.searchBox.setFocused(false);
       this.searchBox.setValue("");
       this.searchBox.setSuggestion("");
+      this.glassSearchCountDirty = true;
    }
 
    @Override
@@ -260,6 +271,11 @@ public class ClickGuiScreen extends ClientScreen implements ClientAccess {
    public void renderContents(
       GuiGraphics graphics, PoseStack poseStack, int mouseX, int mouseY, float partialTick
    ) {
+      if (GlassStyle.isActive()) {
+         this.renderGlassSearchBar(poseStack, mouseX, mouseY);
+         return;
+      }
+
       this.searchFocusAnimation
          .setTarget(
             this.searchBox.isFocused(), 300L
@@ -327,6 +343,107 @@ public class ClickGuiScreen extends ClientScreen implements ClientAccess {
                hintColor
             );
       }
+   }
+
+   private void renderGlassSearchBar(PoseStack poseStack, int mouseX, int mouseY) {
+      float localMouseX = mouseX;
+      float localMouseY = mouseY;
+      float width = 196.0F;
+      float height = 20.0F;
+      float x = GuiScaleUtils.getScaledWidth() / 2.0F - width / 2.0F;
+      float y = 8.0F;
+      this.glassSearchX = x;
+      this.glassSearchY = y;
+      this.glassSearchWidth = width;
+      this.glassSearchHeight = height;
+
+      boolean focused = this.searchBox != null && this.searchBox.isFocused();
+      boolean active = this.searchBox != null && !this.searchBox.getValue().isEmpty();
+      this.glassSearchGlow.setTarget(focused || active, 160L);
+      float glow = this.glassSearchGlow.getValue();
+      GlassStyle.searchBar(poseStack, x, y, width, height, glow);
+
+      String text = this.searchBox == null ? "" : this.searchBox.getValue();
+      String completion = this.searchCompletion == null ? "" : this.searchCompletion;
+      float textY = y + height / 2.0F - FontRenderer.INSTANCE.getHeight() / 2.0F;
+      if (text.isEmpty() && !focused) {
+         FontRenderer.INSTANCE
+            .drawWithShadow(
+               poseStack,
+               ClientContext.languageTable.getTranslationOrDefault("ui.Search", "Search modules"),
+               x + 21.0F,
+               textY,
+               0x99A7ADBA
+            );
+      } else {
+         FontRenderer.INSTANCE
+            .drawWithShadow(poseStack, text, x + 21.0F, textY, focused ? 0xFFFFFFFF : 0xFFCFD4DE);
+         float typedWidth = FontRenderer.INSTANCE.getWidth(text);
+         String cursor = focused ? this.getSearchCursor() : "";
+         FontRenderer.INSTANCE
+            .drawWithShadow(
+               poseStack,
+               completion + cursor,
+               x + 21.0F + typedWidth,
+               textY,
+               0x88A7ADBA
+            );
+      }
+
+      if (active) {
+         if (!text.equals(this.glassSearchQuery)) {
+            this.glassSearchQuery = text;
+            this.glassSearchCountDirty = true;
+         }
+
+         if (this.glassSearchCountDirty) {
+            this.glassSearchCountDirty = false;
+            this.glassSearchMatchCount = this.countSearchMatches(text);
+         }
+
+         String count = this.glassSearchMatchCount + " 项";
+         FontRenderer.INSTANCE
+            .drawWithShadow(
+               poseStack,
+               count,
+               x + width - 14.0F - FontRenderer.INSTANCE.getWidth(count),
+               textY,
+               0x88767D8B
+            );
+      } else {
+         this.glassSearchQuery = "";
+      }
+
+      boolean hovered = localMouseX >= x
+         && localMouseX <= x + width
+         && localMouseY >= y
+         && localMouseY <= y + height;
+      if (hovered) {
+         ClientScreen.cursor = CursorType.POINTER;
+      }
+   }
+
+   private int countSearchMatches(String query) {
+      String normalized = TextUtils.normalizeKeyboardLayout(query);
+      int matches = 0;
+      for (Panel panel : this.panels) {
+         for (GuiElement child : panel.getChildren()) {
+            if (!(child instanceof ModuleComponent component)) {
+               continue;
+            }
+
+            for (String alias : component.getModule()
+               .getAliases()) {
+               if (TextUtils.containsIgnoreCase(alias, normalized)
+                  || TextUtils.containsIgnoreCase(ClientContext.languageTable.translateModule(alias), normalized)) {
+                  matches++;
+                  break;
+               }
+            }
+         }
+      }
+
+      return matches;
    }
 
    private void drawSearchDimmer(PoseStack poseStack) {
@@ -400,6 +517,26 @@ public class ClickGuiScreen extends ClientScreen implements ClientAccess {
          this.handlePresetPaste(event.key());
          return true;
       }
+   }
+
+   @Override
+   public void onMouseClick(double mouseX, double mouseY, int button) {
+      if (GlassStyle.isActive()
+         && button == 0
+         && this.searchBox != null
+         && mouseX >= this.glassSearchX
+         && mouseX <= this.glassSearchX + this.glassSearchWidth
+         && mouseY >= this.glassSearchY
+         && mouseY <= this.glassSearchY + this.glassSearchHeight) {
+         this.setInitialFocus(this.searchBox);
+         return;
+      }
+
+      if (GlassStyle.isActive() && this.searchBox != null && this.searchBox.isFocused()) {
+         this.searchBox.setFocused(false);
+      }
+
+      super.onMouseClick(mouseX, mouseY, button);
    }
 
    public void addGamePanel() {

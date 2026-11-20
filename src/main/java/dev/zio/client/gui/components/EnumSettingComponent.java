@@ -239,6 +239,16 @@ public class EnumSettingComponent<E extends Enum<E> & NamedEntry> extends Settin
       }
 
       if (this.expanded) {
+         if (GlassStyle.isActive()) {
+            GlassStyle.enumList(
+               poseStack,
+               this.panel.getX(),
+               this.panel.getY() + this.componentYOffset + this.getBaseHeight(),
+               this.panel.getWidth(),
+               this.selectableValueCount * this.getBaseHeight()
+            );
+         }
+
          this.optionRows
             .forEach(row -> row.render(poseStack, mouseX, mouseY));
          if (UIModule.INSTANCE.lineSetting.getValue()) {

@@ -450,8 +450,7 @@ public class ClientScreen extends Screen implements ClientAccess {
       }
 
       float blurStrength = BLUR.getRadius()
-         * this.getTransitionOpacity()
-         * (GlassStyle.isActive() ? 0.65F : 1.0F);
+         * this.getTransitionOpacity();
       if (!this.isClosing()
          && BLUR.isToggled()) {
          GuiDrawUtils.flush();
@@ -657,12 +656,13 @@ public class ClientScreen extends Screen implements ClientAccess {
             )
          );
       int panelX = PANEL_START_X;
+      int panelY = GlassStyle.isActive() ? PANEL_START_Y + 30 : PANEL_START_Y;
 
       for (Panel panel : this.panels) {
          panel.setX(
             panelX
          );
-         panel.setY(PANEL_START_Y);
+         panel.setY(panelY);
          panelX += panel.getWidth()
             + PANEL_GAP;
       }

@@ -63,6 +63,11 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
          * UIModule.INSTANCE.animSpeedSetting.getValue(),
       true
    );
+   private final ClampedInterpolatedFloat expandAnimation = new ClampedInterpolatedFloat(
+      () -> 2.0F
+         * UIModule.INSTANCE.animSpeedSetting.getValue(),
+      true
+   );
    private final FloatAnimation searchHighlightAnimation = new FloatAnimation();
    protected final Module module;
    private int searchHighlightCycle = 0;
@@ -312,6 +317,8 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
       float hoverOffset = this.getHoverAnimationValue();
       int baseHeight = this.getBaseHeight();
       boolean glass = GlassStyle.isActive();
+      this.expandAnimation.setTarget(this.requestedOpen);
+      float expandValue = this.expandAnimation.updateAndGet();
       if (glass) {
          GlassStyle.moduleRow(
             poseStack,
@@ -446,26 +453,36 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
          );
       if (this.getUiModule().gearSetting.getValue()
          && !this.children.isEmpty()) {
-         String expandIndicator = this.requestedOpen ? "-" : "+";
-         FontRenderer.INSTANCE
-            .drawWithShadow(
+         if (glass) {
+            GlassStyle.chevron(
                poseStack,
-               expandIndicator,
-               this.panel
-                        .getX()
-                     + this.panel
-                        .getWidth()
-                     - (4)
-                  - FontRenderer.INSTANCE
-                     .getWidth(expandIndicator),
-               this.panel
-                     .getY()
-                  + this.getTextYOffset()
-                  + this.yOffset,
-               glass && this.module.isToggled()
-                  ? Color.WHITE
-                  : this.getUiModule().textColorSetting.getValue()
+               this.panel.getX() + this.panel.getWidth() - 8.0F,
+               this.panel.getY() + this.yOffset + this.getBaseHeight() / 2.0F,
+               2.4F,
+               90.0F * expandValue,
+               1.0F,
+               this.module.isToggled() ? 0xB3FFFFFF : 0x99A7ADBA
             );
+         } else {
+            String expandIndicator = this.requestedOpen ? "-" : "+";
+            FontRenderer.INSTANCE
+               .drawWithShadow(
+                  poseStack,
+                  expandIndicator,
+                  this.panel
+                           .getX()
+                        + this.panel
+                           .getWidth()
+                        - (4)
+                     - FontRenderer.INSTANCE
+                        .getWidth(expandIndicator),
+                  this.panel
+                        .getY()
+                     + this.getTextYOffset()
+                     + this.yOffset,
+                  this.getUiModule().textColorSetting.getValue()
+               );
+         }
       }
 
       MutableComponent statusText = Component.empty();

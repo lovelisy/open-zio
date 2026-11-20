@@ -26,8 +26,8 @@ public final class GlassStyle {
    public static final float RADIUS = 9.0F;
    public static final int HEADER_HEIGHT = 18;
    public static final float ROW_RADIUS = 5.5F;
-   private static final int BODY_TOP = 0x661B1F26;
-   private static final int BODY_BOTTOM = 0x80101318;
+   private static final int BODY_TOP = 0x6A23272F;
+   private static final int BODY_BOTTOM = 0x8615181D;
    private static final int OUTLINE_TOP = 0x50FFFFFF;
    private static final int OUTLINE_BOTTOM = 0x14FFFFFF;
    private static final int DIVIDER = 0x1FFFFFFF;
@@ -230,6 +230,53 @@ public final class GlassStyle {
          int wash = (int)(0x1A * hoverProgress) << 24 | 0xFFFFFF;
          GuiShapes.fill(poses, rowX, rowY, rowWidth, rowHeight, ROW_RADIUS - 1.0F, wash);
       }
+   }
+
+   public static void enumList(
+      PoseStack poses, float x, float y, float w, float h
+   ) {
+      if (w <= 0.0F || h <= 0.0F) {
+         return;
+      }
+
+      GuiShapes.fill(poses, x + 4.0F, y + 1.0F, w - 8.0F, h - 2.0F, 6.0F, 0x30000000);
+      GuiShapes.outline(
+         poses, x + 4.0F, y + 1.0F, w - 8.0F, h - 2.0F, 6.0F, 0.6F,
+         0x06FFFFFF, 0x1CFFFFFF
+      );
+   }
+
+   public static void searchBar(
+      PoseStack poses, float x, float y, float w, float h, float glow
+   ) {
+      if (w <= 0.0F || h <= 0.0F) {
+         return;
+      }
+
+      GuiShapes.fillGradient(poses, x, y, w, h, h / 2.0F, BODY_TOP, BODY_BOTTOM);
+      GuiShapes.fill(poses, x + h / 2.0F, y + 0.5F, w - h, 0.5F, 0.0F, 0x30FFFFFF);
+      if (glow > 0.01F) {
+         GuiShapes.glow(
+            poses, x - 2.0F, y - 2.0F, w + 4.0F, h + 4.0F, (h + 4.0F) / 2.0F, 8.0F,
+            accent(0.28F * glow)
+         );
+      }
+
+      GuiShapes.outline(
+         poses, x, y, w, h, h / 2.0F, 0.75F,
+         glow > 0.01F ? accent(0.85F * glow) : OUTLINE_TOP,
+         glow > 0.01F ? accent(0.35F * glow) : OUTLINE_BOTTOM
+      );
+
+      float iconCenterX = x + 11.0F;
+      float iconCenterY = y + h / 2.0F;
+      int iconColor = glow > 0.01F ? 0xEEFFFFFF : 0x99A7ADBA;
+      float radius = 3.0F;
+      GuiShapes.outline(
+         poses, iconCenterX - radius - 2.0F, iconCenterY - radius - 1.5F,
+         radius * 2.0F, radius * 2.0F, radius, 0.8F, iconColor, iconColor
+      );
+      segment(poses, iconCenterX + 1.2F, iconCenterY + 1.8F, iconCenterX + 3.8F, iconCenterY + 4.2F, 1.0F, iconColor);
    }
 
    public static void optionHover(

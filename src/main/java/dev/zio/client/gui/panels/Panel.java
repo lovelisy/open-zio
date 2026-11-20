@@ -63,6 +63,8 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
    private int scrollRecoveryCounter;
    private int glassRank;
    private int glassRankCount = 1;
+   private float glassSheen = -1.0F;
+   private final FloatAnimation glassLiftAnimation = new FloatAnimation();
 
    private static final float SCROLL_RECOVERY_FPS_BASE = 200.0F;
    private static final float SCROLL_RECOVERY_SPEED = 20.0F;
@@ -272,41 +274,51 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
       this.glassRankCount = Math.max(1, count);
    }
 
-   private void applyGlassEntrance(PoseStack poseStack) {
+   private void applyGlassEntrance(PoseStack poseStack, double mouseX, double mouseY) {
+      this.glassSheen = -1.0F;
       if (!GlassStyle.isActive()) {
+         this.glassLiftAnimation.setTarget(0.0F, 1L);
          return;
       }
 
       Object screenCandidate = ClientAccess.zioMinecraft == null ? null : ClientAccess.zioMinecraft.screen;
       if (!(screenCandidate instanceof ClientScreen screen)) {
+         this.glassLiftAnimation.setTarget(0.0F, 1L);
          return;
       }
 
       long elapsed = System.currentTimeMillis() - screen.getTransitionStartedAt();
+      float seconds = elapsed / 1000.0F;
       float scale;
       float shift;
       if (screen.isClosing()) {
-         long delay = (long)(this.glassRankCount - 1 - this.glassRank) * 20L;
-         float progress = Mth.clamp((elapsed - delay) / 200.0F, 0.0F, 1.0F);
+         long delay = (long)(this.glassRankCount - 1 - this.glassRank) * 30L;
+         float progress = Mth.clamp((elapsed - delay) / 220.0F, 0.0F, 1.0F);
          float eased = progress * progress * progress;
-         scale = 1.0F - 0.1F * eased;
-         shift = 12.0F * eased;
+         scale = 1.0F - 0.12F * eased;
+         shift = 14.0F * eased;
       } else {
-         long delay = (long)this.glassRank * 45L;
-         float progress = Mth.clamp((elapsed - delay) / 420.0F, 0.0F, 1.0F);
+         float delay = this.glassRank * 0.055F;
+         float progress = Mth.clamp((seconds - delay) / 0.45F, 0.0F, 1.0F);
          float inverse = progress - 1.0F;
          float back = 1.0F + 2.70158F * inverse * inverse * inverse + 1.70158F * inverse * inverse;
          float cube = 1.0F - (1.0F - progress) * (1.0F - progress) * (1.0F - progress);
-         scale = 0.86F + 0.14F * back;
-         shift = (1.0F - cube) * 16.0F;
+         scale = 0.90F + 0.10F * back;
+         shift = (1.0F - cube) * 24.0F;
+         this.glassSheen = (seconds - delay - 0.24F) / 0.55F;
       }
+
+      boolean hovered = this.isMouseOver(mouseX, mouseY);
+      this.glassLiftAnimation.setTarget(hovered ? 1.0F : 0.0F, 170L);
+      float lift = this.glassLiftAnimation.getValue();
+      scale *= 1.0F + 0.012F * lift;
 
       if (Math.abs(scale - 1.0F) < 0.0001F && Math.abs(shift) < 0.0001F) {
          return;
       }
 
       float centerX = this.x + this.getWidth() / 2.0F;
-      float centerY = this.y + this.height / 2.0F;
+      float centerY = this.y + this.getHeight() / 2.0F;
       poseStack.translate(centerX, centerY, 0.0F);
       poseStack.scale(scale, scale, 1.0F);
       poseStack.translate(-centerX, -centerY + shift, 0.0F);
@@ -419,7 +431,7 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
    @Override
    public void render(PoseStack poseStack, double mouseX, double mouseY) {
       poseStack.pushPose();
-      this.applyGlassEntrance(poseStack);
+      this.applyGlassEntrance(poseStack, mouseX, mouseY);
       Color uiColor = this.getUiModule().colorSetting.getValue();
       this.expansionAnimation.setTarget(this.expanded ? 1.0F : 0.0F);
       float expansionValue = this.expansionAnimation
