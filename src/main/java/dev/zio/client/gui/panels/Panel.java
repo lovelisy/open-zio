@@ -11,6 +11,7 @@ package dev.zio.client.gui.panels;
 
 import dev.zio.client.ClientAccess;
 import dev.zio.client.ClientContext;
+import dev.zio.client.audio.BuiltinSound;
 import dev.zio.client.gui.screens.ClientScreen;
 import dev.zio.client.render.GuiDrawUtils;
 import dev.zio.client.utils.InterpolatedFloat;
@@ -60,6 +61,8 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
    private boolean heightLimitDisabled;
    private int scrollOffset;
    private int scrollRecoveryCounter;
+   private int glassRank;
+   private int glassRankCount = 1;
 
    private static final float SCROLL_RECOVERY_FPS_BASE = 200.0F;
    private static final float SCROLL_RECOVERY_SPEED = 20.0F;
@@ -264,6 +267,51 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
       return null;
    }
 
+   public void setGlassRank(int rank, int count) {
+      this.glassRank = Math.max(0, rank);
+      this.glassRankCount = Math.max(1, count);
+   }
+
+   private void applyGlassEntrance(PoseStack poseStack) {
+      if (!GlassStyle.isActive()) {
+         return;
+      }
+
+      Object screenCandidate = ClientAccess.zioMinecraft == null ? null : ClientAccess.zioMinecraft.screen;
+      if (!(screenCandidate instanceof ClientScreen screen)) {
+         return;
+      }
+
+      long elapsed = System.currentTimeMillis() - screen.getTransitionStartedAt();
+      float scale;
+      float shift;
+      if (screen.isClosing()) {
+         long delay = (long)(this.glassRankCount - 1 - this.glassRank) * 20L;
+         float progress = Mth.clamp((elapsed - delay) / 200.0F, 0.0F, 1.0F);
+         float eased = progress * progress * progress;
+         scale = 1.0F - 0.1F * eased;
+         shift = 12.0F * eased;
+      } else {
+         long delay = (long)this.glassRank * 45L;
+         float progress = Mth.clamp((elapsed - delay) / 420.0F, 0.0F, 1.0F);
+         float inverse = progress - 1.0F;
+         float back = 1.0F + 2.70158F * inverse * inverse * inverse + 1.70158F * inverse * inverse;
+         float cube = 1.0F - (1.0F - progress) * (1.0F - progress) * (1.0F - progress);
+         scale = 0.86F + 0.14F * back;
+         shift = (1.0F - cube) * 16.0F;
+      }
+
+      if (Math.abs(scale - 1.0F) < 0.0001F && Math.abs(shift) < 0.0001F) {
+         return;
+      }
+
+      float centerX = this.x + this.getWidth() / 2.0F;
+      float centerY = this.y + this.height / 2.0F;
+      poseStack.translate(centerX, centerY, 0.0F);
+      poseStack.scale(scale, scale, 1.0F);
+      poseStack.translate(-centerX, -centerY + shift, 0.0F);
+   }
+
    @Override
    public String getName() {
       return this.name;
@@ -370,6 +418,8 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
 
    @Override
    public void render(PoseStack poseStack, double mouseX, double mouseY) {
+      poseStack.pushPose();
+      this.applyGlassEntrance(poseStack);
       Color uiColor = this.getUiModule().colorSetting.getValue();
       this.expansionAnimation.setTarget(this.expanded ? 1.0F : 0.0F);
       float expansionValue = this.expansionAnimation
@@ -555,6 +605,7 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
       poseStack.popPose();
       this.recoverScrollOffset();
       this.updateLayout();
+      poseStack.popPose();
       GuiDrawUtils.flush();
    }
 
@@ -588,6 +639,10 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
          && button == 1) {
          this.setExpanded(
             !this.expanded
+         );
+         GlassStyle.play(
+            this.expanded ? BuiltinSound.EXPAND : BuiltinSound.COLLAPSE,
+            0.9F
          );
       }
 

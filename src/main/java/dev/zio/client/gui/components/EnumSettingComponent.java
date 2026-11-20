@@ -12,6 +12,7 @@ package dev.zio.client.gui.components;
 import dev.zio.client.utils.ClampedInterpolatedFloat;
 import dev.zio.client.utils.ExperimentalFeatures;
 import dev.zio.client.ClientContext;
+import dev.zio.client.audio.BuiltinSound;
 import dev.zio.client.gui.components.EnumOptionRow;
 import dev.zio.client.config.EnumJsonConverter;
 import dev.zio.client.render.GuiDrawUtils;
@@ -39,6 +40,11 @@ public class EnumSettingComponent<E extends Enum<E> & NamedEntry> extends Settin
       true
    );
    private final ClampedInterpolatedFloat fillAnimation = new ClampedInterpolatedFloat(
+      () -> 2.0F
+         * UIModule.INSTANCE.animSpeedSetting.getValue(),
+      true
+   );
+   private final ClampedInterpolatedFloat chevronAnimation = new ClampedInterpolatedFloat(
       () -> 2.0F
          * UIModule.INSTANCE.animSpeedSetting.getValue(),
       true
@@ -145,15 +151,7 @@ public class EnumSettingComponent<E extends Enum<E> & NamedEntry> extends Settin
                + this.getBaseHeight()
             - 0.5F;
          float selectionY = Math.max(selectionOffset + firstRowY, firstRowY);
-         if (GlassStyle.isActive()) {
-            GlassStyle.enumSelection(
-               poseStack,
-               this.panel.getX(),
-               selectionY,
-               this.panel.getWidth(),
-               this.getBaseHeight()
-            );
-         } else {
+         if (!GlassStyle.isActive()) {
             GuiDrawUtils.fillRect(
                poseStack,
                this.panel
@@ -226,6 +224,20 @@ public class EnumSettingComponent<E extends Enum<E> & NamedEntry> extends Settin
             this.getUiModule().colorSetting.getValue()
          );
       }
+      if (GlassStyle.isActive()) {
+         this.chevronAnimation.setTarget(this.expanded ? 1.0F : 0.0F);
+         float chevronOpen = this.chevronAnimation.updateAndGet();
+         GlassStyle.chevron(
+            poseStack,
+            this.panel.getX() + this.panel.getWidth() - 8.0F,
+            this.panel.getY() + this.componentYOffset + this.getBaseHeight() / 2.0F,
+            2.2F,
+            -90.0F + 90.0F * chevronOpen,
+            1.0F,
+            0x99A7ADBA
+         );
+      }
+
       if (this.expanded) {
          this.optionRows
             .forEach(row -> row.render(poseStack, mouseX, mouseY));
@@ -330,6 +342,7 @@ public class EnumSettingComponent<E extends Enum<E> & NamedEntry> extends Settin
                   this.selectedIndex + 1
                )
                % this.selectableValueCount;
+            GlassStyle.play(BuiltinSound.CLICK, 0.8F);
          }
 
          if (button == 1) {
@@ -361,6 +374,7 @@ public class EnumSettingComponent<E extends Enum<E> & NamedEntry> extends Settin
             this.expanded = !this.expanded;
             this.getPanel()
                .updateLayout();
+            GlassStyle.play(this.expanded ? BuiltinSound.EXPAND : BuiltinSound.COLLAPSE, 0.9F);
          }
       }
    }

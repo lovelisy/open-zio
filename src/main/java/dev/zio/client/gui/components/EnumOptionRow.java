@@ -10,6 +10,8 @@
 package dev.zio.client.gui.components;
 
 import dev.zio.client.ClientContext;
+import dev.zio.client.audio.BuiltinSound;
+import dev.zio.client.gui.GlassStyle;
 import dev.zio.client.render.FontRenderer;
 import dev.zio.client.settings.NamedEntry;
 
@@ -41,6 +43,38 @@ public class EnumOptionRow<E extends Enum<E> & NamedEntry> extends AbstractCompo
       super.render(poseStack, mouseX, mouseY);
       String displayLabel = ClientContext.languageTable.translateEnum(
          this.enumComponent.getSetting().getValue().getDeclaringClass().getName(), this.label, this.label);
+      if (GlassStyle.isActive()) {
+         float rowY = this.enumComponent.getY() + this.yOffset;
+         float rowHeight = this.getBaseHeight();
+         GlassStyle.optionHover(
+            poseStack,
+            this.getPanel().getX(),
+            rowY,
+            this.getPanel().getWidth(),
+            rowHeight,
+            this.getHoverAnimationValue()
+         );
+         boolean selected = this.enumComponent.getSetting().getValue().getName().equalsIgnoreCase(this.label);
+         if (selected) {
+            GlassStyle.optionDot(
+               poseStack,
+               this.getPanel().getX() + 10.0F,
+               rowY + rowHeight / 2.0F,
+               1.0F
+            );
+         }
+
+         FontRenderer.INSTANCE
+            .drawWithShadow(
+               poseStack,
+               displayLabel,
+               this.getPanel().getX() + 18.0F,
+               rowY + this.getTextYOffset() - 1.0F - this.getHoverAnimationValue(),
+               selected ? Color.WHITE : new Color(0xFF9AA0AC, true)
+            );
+         return;
+      }
+
       FontRenderer.INSTANCE
          .drawWithShadow(
             poseStack,
@@ -90,6 +124,7 @@ public class EnumOptionRow<E extends Enum<E> & NamedEntry> extends AbstractCompo
                   .setValue(candidate);
                this.enumComponent
                   .setSelectedIndex(this.selectableIndex);
+               GlassStyle.play(BuiltinSound.CLICK, 0.8F);
             }
          }
       }

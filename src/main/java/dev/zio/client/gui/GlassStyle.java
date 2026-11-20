@@ -9,10 +9,14 @@
 
 package dev.zio.client.gui;
 
+import dev.zio.client.ClientContext;
+import dev.zio.client.audio.BuiltinSound;
+import dev.zio.client.audio.SoundClip;
 import dev.zio.client.modules.client.UIModule;
 import dev.zio.client.render.ColorUtils;
 import dev.zio.client.render.FontRenderer;
 import dev.zio.client.render.GuiShapes;
+import dev.zio.client.render.GuiDrawUtils;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.Color;
@@ -22,8 +26,8 @@ public final class GlassStyle {
    public static final float RADIUS = 9.0F;
    public static final int HEADER_HEIGHT = 18;
    public static final float ROW_RADIUS = 5.5F;
-   private static final int BODY_TOP = 0x8A1B1F26;
-   private static final int BODY_BOTTOM = 0xAC101318;
+   private static final int BODY_TOP = 0x661B1F26;
+   private static final int BODY_BOTTOM = 0x80101318;
    private static final int OUTLINE_TOP = 0x50FFFFFF;
    private static final int OUTLINE_BOTTOM = 0x14FFFFFF;
    private static final int DIVIDER = 0x1FFFFFFF;
@@ -38,6 +42,27 @@ public final class GlassStyle {
          && UIModule.INSTANCE.guiStyleSetting.getValue() == UIModule.GuiStyle.GLASS;
    }
 
+   public static void play(BuiltinSound sound, float volume) {
+      if (!isActive()) {
+         return;
+      }
+
+      UIModule ui = UIModule.INSTANCE;
+      if (ui == null || ui.guiSoundSetting == null || !ui.guiSoundSetting.getValue()) {
+         return;
+      }
+
+      float level = volume * ui.guiVolumeSetting.getValue();
+      if (level <= 0.01F || ClientContext.soundManager == null) {
+         return;
+      }
+
+      SoundClip clip = ClientContext.soundManager.getSound(sound.getIdentifier());
+      if (clip != null) {
+         clip.play(level);
+      }
+   }
+
    public static int accent(float alpha) {
       Color color = UIModule.INSTANCE.colorSetting.getValue();
       return ColorUtils.toArgb(color, alpha);
@@ -49,6 +74,7 @@ public final class GlassStyle {
       }
 
       GuiShapes.fillGradient(poses, x, y, w, h, RADIUS, BODY_TOP, BODY_BOTTOM);
+      GuiShapes.fill(poses, x + RADIUS, y + 0.5F, w - RADIUS * 2.0F, 0.5F, 0.0F, 0x38FFFFFF);
       float tintedHeader = Math.min(headerHeight, h);
       GuiShapes.fillGradient(poses, x, y, w, tintedHeader, RADIUS, RADIUS, 0.0F, 0.0F, accent(0.16F), accent(0.0F));
       GuiShapes.fillGradient(
@@ -152,8 +178,12 @@ public final class GlassStyle {
       }
 
       if (hoverProgress > 0.01F) {
-         int wash = (int)(0x11 * hoverProgress) << 24 | 0xFFFFFF;
+         int wash = (int)(0x26 * hoverProgress) << 24 | 0xFFFFFF;
          GuiShapes.fill(poses, rowX, rowY, rowWidth, rowHeight, ROW_RADIUS, wash);
+         GuiShapes.outline(
+            poses, rowX, rowY, rowWidth, rowHeight, ROW_RADIUS, 0.6F,
+            accent(0.12F * hoverProgress), accent(0.03F * hoverProgress)
+         );
       }
    }
 
@@ -168,12 +198,6 @@ public final class GlassStyle {
       GuiShapes.fillGradient(
          poses, x + 4.0F, y + 1.0F, width, h - 2.0F, ROW_RADIUS - 1.0F, accent(0.78F), accent(0.52F)
       );
-   }
-
-   public static void enumSelection(
-      PoseStack poses, float x, float y, float w, float h
-   ) {
-      GuiShapes.fill(poses, x + 3.0F, y + 1.0F, w - 6.0F, h - 2.0F, ROW_RADIUS - 1.0F, accent(0.22F));
    }
 
    public static void highlight(
@@ -203,8 +227,68 @@ public final class GlassStyle {
       }
 
       if (hoverProgress > 0.01F) {
-         int wash = (int)(0x0C * hoverProgress) << 24 | 0xFFFFFF;
+         int wash = (int)(0x1A * hoverProgress) << 24 | 0xFFFFFF;
          GuiShapes.fill(poses, rowX, rowY, rowWidth, rowHeight, ROW_RADIUS - 1.0F, wash);
       }
+   }
+
+   public static void optionHover(
+      PoseStack poses, float x, float y, float w, float h, float progress
+   ) {
+      if (progress <= 0.01F) {
+         return;
+      }
+
+      int wash = (int)(0x1E * progress) << 24 | 0xFFFFFF;
+      GuiShapes.fill(poses, x + 5.0F, y + 0.5F, w - 10.0F, h - 1.0F, 4.0F, wash);
+   }
+
+   public static void optionDot(PoseStack poses, float x, float y, float alpha) {
+      GuiShapes.glow(poses, x - 2.2F, y - 2.2F, 4.4F, 4.4F, 2.2F, 2.5F, accent(0.5F * alpha));
+      GuiShapes.fill(poses, x - 1.8F, y - 1.8F, 3.6F, 3.6F, 1.8F, accent(alpha));
+   }
+
+   public static void chevron(
+      PoseStack poses, float centerX, float centerY, float size, float rotationDegrees, float thickness, int color
+   ) {
+      double angle = Math.toRadians(rotationDegrees);
+      float cos = (float)Math.cos(angle);
+      float sin = (float)Math.sin(angle);
+      segment(
+         poses,
+         centerX + (-size * cos - -size * 0.5F * sin),
+         centerY + (-size * sin + -size * 0.5F * cos),
+         centerX + (0.0F * cos - size * 0.5F * sin),
+         centerY + (0.0F * sin + size * 0.5F * cos),
+         thickness,
+         color
+      );
+      segment(
+         poses,
+         centerX + (0.0F * cos - size * 0.5F * sin),
+         centerY + (0.0F * sin + size * 0.5F * cos),
+         centerX + (size * cos - -size * 0.5F * sin),
+         centerY + (size * sin + -size * 0.5F * cos),
+         thickness,
+         color
+      );
+   }
+
+   private static void segment(
+      PoseStack poses, float x0, float y0, float x1, float y1, float thickness, int color
+   ) {
+      float dx = x1 - x0;
+      float dy = y1 - y0;
+      float length = (float)Math.sqrt(dx * dx + dy * dy);
+      if (length <= 0.0F) {
+         return;
+      }
+
+      float nx = -dy / length * thickness / 2.0F;
+      float ny = dx / length * thickness / 2.0F;
+      GuiDrawUtils.fillQuad(
+         poses, x0 + nx, y0 + ny, x1 + nx, y1 + ny, x1 - nx, y1 - ny, x0 - nx, y0 - ny,
+         color, color, color, color
+      );
    }
 }

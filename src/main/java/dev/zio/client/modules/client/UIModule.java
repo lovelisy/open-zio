@@ -59,6 +59,8 @@ public final class UIModule extends Module {
    private final Setting<Boolean> resetSetting;
    public final Setting<StyleChoice> styleSetting;
    public final Setting<GuiStyle> guiStyleSetting;
+   public final Setting<Boolean> guiSoundSetting;
+   public final Setting<Float> guiVolumeSetting;
    public final Setting<Float> animSpeedSetting;
    public final Setting<Float> scaleSetting;
    public final Setting<Boolean> snowSetting;
@@ -198,6 +200,8 @@ public final class UIModule extends Module {
       this.resetSetting = this.add(new BooleanSetting(("Reset"), true));
       this.styleSetting = this.add(new EnumSetting<>(("Style"), UIModule.StyleChoice.PLAIN));
       this.guiStyleSetting = this.add(new EnumSetting<>(("Design"), UIModule.GuiStyle.VANILLA));
+      this.guiSoundSetting = this.add(new BooleanSetting("GuiSound", true));
+      this.guiVolumeSetting = this.add(new NumberSetting<>("GuiVolume", 0.7F, 0.0F, 1.0F));
       this.animSpeedSetting = this.add(new NumberSetting<>("AnimSpeed", 1.0F, 0.5F, 2.5F));
       this.scaleSetting = this.add(new NumberSetting<>("Scale", 1.0F, 0.1F, 2.0F));
       this.snowSetting = this.add(new BooleanSetting("Snow", true));

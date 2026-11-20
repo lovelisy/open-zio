@@ -23,6 +23,7 @@ import dev.zio.client.gui.components.ColorSettingComponent;
 import dev.zio.client.render.ColorUtils;
 import dev.zio.client.gui.GuiElement;
 import dev.zio.client.gui.GlassStyle;
+import dev.zio.client.audio.BuiltinSound;
 import dev.zio.client.render.FontRenderer;
 import dev.zio.client.gui.components.AbstractComponent;
 import dev.zio.client.gui.ScissorStack;
@@ -568,12 +569,21 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
       if (this.isMouseOver(mouseX, mouseY)
          && button == 0
          && this.isLeftClickEligible()) {
+         boolean toggled = this.module.isToggled();
          this.module
             .toggle();
+         GlassStyle.play(
+            toggled ? BuiltinSound.TOGGLE_OFF : BuiltinSound.TOGGLE_ON,
+            0.9F
+         );
       }
 
       if (this.isMouseOver(mouseX, mouseY) && button == 1) {
          this.toggleOpen();
+         GlassStyle.play(
+            this.requestedOpen ? BuiltinSound.EXPAND : BuiltinSound.COLLAPSE,
+            0.9F
+         );
       }
 
       this.children

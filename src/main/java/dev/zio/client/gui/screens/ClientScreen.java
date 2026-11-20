@@ -18,6 +18,7 @@ import dev.zio.client.utils.InterpolatedFloat;
 import dev.zio.client.render.MaskShaderRenderer;
 import dev.zio.client.gui.CursorType;
 import dev.zio.client.gui.GlassStyle;
+import dev.zio.client.audio.BuiltinSound;
 import dev.zio.client.utils.world.Season;
 import dev.zio.client.render.RenderUtils;
 import dev.zio.client.render.ColorUtils;
@@ -91,6 +92,7 @@ public class ClientScreen extends Screen implements ClientAccess {
    private Screen parentScreen;
    protected boolean escapeCloseAllowed;
    private boolean skipOpeningTransition;
+   private boolean openSoundPlayed;
 
    public Screen getParentScreen() {
       return this.parentScreen;
@@ -122,7 +124,7 @@ public class ClientScreen extends Screen implements ClientAccess {
 
    public float getTransitionOpacity() {
       float opacity = (float)(System.currentTimeMillis() - this.transitionStartedAt)
-         / TRANSITION_DURATION_MILLIS;
+         / this.getTransitionDuration();
       if (this.closing) {
          opacity = 1.0F
             - opacity;
@@ -133,6 +135,14 @@ public class ClientScreen extends Screen implements ClientAccess {
          0.0F,
          1.0F
       );
+   }
+
+   public long getTransitionStartedAt() {
+      return this.transitionStartedAt;
+   }
+
+   public long getTransitionDuration() {
+      return GlassStyle.isActive() ? 340L : TRANSITION_DURATION_MILLIS;
    }
 
    public void setPanelDragging(boolean dragging) {
@@ -177,7 +187,7 @@ public class ClientScreen extends Screen implements ClientAccess {
    @Override
    public void tick() {
       if (this.closing
-         && System.currentTimeMillis() - this.transitionStartedAt >= TRANSITION_DURATION_MILLIS) {
+         && System.currentTimeMillis() - this.transitionStartedAt >= this.getTransitionDuration()) {
          for (Panel panel : this.panels) {
             panel.setDragging(false);
          }
@@ -347,11 +357,22 @@ public class ClientScreen extends Screen implements ClientAccess {
          panel.init();
       }
 
+      float centerX = screenWidth / 2.0F;
+      ArrayList<Panel> ordered = new ArrayList<>(this.panels);
+      ordered.sort(Comparator.comparingDouble(panel -> Math.abs(panel.getX() + panel.getWidth() / 2.0F - centerX)));
+      for (int index = 0; index < ordered.size(); index++) {
+         ordered.get(index).setGlassRank(index, ordered.size());
+      }
+
       if (this.skipOpeningTransition) {
-         this.transitionStartedAt = -TRANSITION_DURATION_MILLIS;
+         this.transitionStartedAt = -this.getTransitionDuration();
          this.skipOpeningTransition = false;
       } else {
          this.transitionStartedAt = System.currentTimeMillis();
+         if (!this.openSoundPlayed) {
+            this.openSoundPlayed = true;
+            GlassStyle.play(BuiltinSound.OPEN, 1.0F);
+         }
       }
    }
 
@@ -429,7 +450,8 @@ public class ClientScreen extends Screen implements ClientAccess {
       }
 
       float blurStrength = BLUR.getRadius()
-         * this.getTransitionOpacity();
+         * this.getTransitionOpacity()
+         * (GlassStyle.isActive() ? 0.65F : 1.0F);
       if (!this.isClosing()
          && BLUR.isToggled()) {
          GuiDrawUtils.flush();
@@ -611,6 +633,8 @@ public class ClientScreen extends Screen implements ClientAccess {
       if (!this.closing) {
          this.panelDragging = false;
          this.transitionStartedAt = System.currentTimeMillis();
+         this.openSoundPlayed = false;
+         GlassStyle.play(BuiltinSound.CLOSE, 1.0F);
          if (UIModule.INSTANCE.isToggled()) {
             UIModule.INSTANCE
                .toggle();
