@@ -74,7 +74,8 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
    private boolean copyShortcutHovered;
    private boolean requestedOpen;
    private long pressStartedAt = -1L;
-   private boolean pressPushed;   public float animatedHeight;
+   private boolean pressPushed;
+   public float animatedHeight;
 
    private float getPressScale() {
       if (!GlassStyle.isActive() || this.pressStartedAt <= 0L) {
@@ -334,6 +335,7 @@ public class ModuleComponent extends AbstractComponent implements CloseState {
       boolean glass = GlassStyle.isActive();
       this.expandAnimation.setTarget(this.requestedOpen);
       float expandValue = this.expandAnimation.updateAndGet();
+      this.pressPushed = false;
       if (glass) {
          float press = this.getPressScale();
          if (press < 0.999F) {

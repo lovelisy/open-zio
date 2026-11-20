@@ -455,7 +455,10 @@ public class Panel implements RegistryContainer, GuiElement, NamedEntry {
       boolean glass = GlassStyle.isActive();
       float visibleHeight = Math.max(this.getHeaderHeight(), this.height * expansionValue);
       if (glass) {
-         GlassStyle.panel(poseStack, this.x, this.y, this.getWidth(), visibleHeight, this.getHeaderHeight(), mouseX, mouseY);
+         GlassStyle.panel(
+            poseStack, this.x, this.y, this.getWidth(), visibleHeight, this.getHeaderHeight(),
+            (float)mouseX, (float)mouseY
+         );
          GlassStyle.sheen(poseStack, this.x, this.y, this.getWidth(), visibleHeight, this.glassSheen);
          GlassStyle.title(
             poseStack,
